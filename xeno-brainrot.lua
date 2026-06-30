@@ -1,5 +1,5 @@
 -- SCRIPT FINAL - XENO (OPREȘTE ABSOLUT TOT)
--- NU MAI MODIFICA NIMIC, ASTA MERGE
+-- ACESTA ESTE CEL CARE A FUNCȚIONAT ÎNAINTE, RE-ADAUGAT
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -26,62 +26,31 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE ABSOLUT TOATE SUNETELE =====
+-- ===== ASTA E CEL CARE A FUNCȚIONAT =====
 local function killAllAudio()
-    -- 1. VOLUM GLOBAL LA 0
+    -- Setează volumul global la 0
     SoundService.Volume = 0
     
-    -- 2. OPREȘTE TOATE SUNETELE EXISTENTE
-    for _, obj in pairs(game:GetDescendants()) do
-        if obj:IsA("Sound") then
-            obj.Volume = 0
-            obj:Stop()
-            obj.Playing = false
-        end
-        if obj:IsA("SoundGroup") then
-            obj.Volume = 0
+    -- Oprește toate sunetele existente
+    for _, sound in pairs(game:GetDescendants()) do
+        if sound:IsA("Sound") then
+            sound.Volume = 0
+            sound:Stop()
+            sound.Playing = false
         end
     end
     
-    -- 3. BLOCEAZĂ ORICE SUNET NOU (LOOP SUPER RAPID)
+    -- BLOCEAZĂ ORICE SUNET NOU (loop la 0.01 secunde)
     spawn(function()
         while true do
             task.wait(0.01)
-            for _, obj in pairs(game:GetDescendants()) do
-                if obj:IsA("Sound") then
-                    obj.Volume = 0
-                    obj:Stop()
-                    obj.Playing = false
-                end
-                if obj:IsA("SoundGroup") then
-                    obj.Volume = 0
-                end
-            end
-        end
-    end)
-    
-    -- 4. DISTRUGERE DIRECTĂ A SUNETELOR DE PAȘI
-    spawn(function()
-        while true do
-            task.wait(0.1)
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj:IsA("Sound") and (string.find(obj.Name:lower(), "foot") or 
-                   string.find(obj.Name:lower(), "step") or 
-                   string.find(obj.Name:lower(), "walk") or 
-                   string.find(obj.Name:lower(), "run") or
-                   string.find(obj.Name:lower(), "clone") or
-                   string.find(obj.Name:lower(), "teleport")) then
-                    obj.Volume = 0
-                    obj:Stop()
-                    obj.Playing = false
-                end
-            end
-            -- Oprește și sunetele din SoundService
-            for _, obj in pairs(SoundService:GetDescendants()) do
-                if obj:IsA("Sound") then
-                    obj.Volume = 0
-                    obj:Stop()
-                    obj.Playing = false
+            for _, sound in pairs(game:GetDescendants()) do
+                if sound:IsA("Sound") then
+                    if sound.Volume > 0 or sound.Playing == true then
+                        sound.Volume = 0
+                        sound:Stop()
+                        sound.Playing = false
+                    end
                 end
             end
         end
