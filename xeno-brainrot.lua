@@ -1,5 +1,5 @@
--- SCRIPT FINAL - XENO (OPREȘTE ABSOLUT TOT)
--- ACESTA ESTE CEL CARE A FUNCȚIONAT ÎNAINTE, RE-ADAUGAT
+-- SCRIPT XENO - CU SUNET DE FUNDAL (ACOPERĂ TOATE SUNETELE)
+-- Compatibil cu Xeno Executor
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -26,12 +26,10 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== ASTA E CEL CARE A FUNCȚIONAT =====
+-- ===== OPREȘTE TOATE SUNETELE, APOI ADĂUGĂ UNUL DE FUNDAL =====
 local function killAllAudio()
-    -- Setează volumul global la 0
+    -- Oprește toate sunetele
     SoundService.Volume = 0
-    
-    -- Oprește toate sunetele existente
     for _, sound in pairs(game:GetDescendants()) do
         if sound:IsA("Sound") then
             sound.Volume = 0
@@ -40,17 +38,25 @@ local function killAllAudio()
         end
     end
     
-    -- BLOCEAZĂ ORICE SUNET NOU (loop la 0.01 secunde)
+    -- Creează un sunet de fundal (white noise / ambient)
+    local ambientSound = Instance.new("Sound")
+    ambientSound.Name = "AmbientCover"
+    ambientSound.SoundId = "rbxassetid://9120263686"  -- Sunet de ploaie / ambient
+    ambientSound.Volume = 0.5
+    ambientSound.Looped = true
+    ambientSound.PlayOnRemove = false
+    ambientSound.Parent = SoundService
+    ambientSound:Play()
+    
+    -- BLOCEAZĂ ORICE SUNET NOU, DAR PĂSTREAZĂ SUNETUL DE FUNDAL
     spawn(function()
         while true do
-            task.wait(0.01)
+            task.wait(0.05)
             for _, sound in pairs(game:GetDescendants()) do
-                if sound:IsA("Sound") then
-                    if sound.Volume > 0 or sound.Playing == true then
-                        sound.Volume = 0
-                        sound:Stop()
-                        sound.Playing = false
-                    end
+                if sound:IsA("Sound") and sound.Name ~= "AmbientCover" then
+                    sound.Volume = 0
+                    sound:Stop()
+                    sound.Playing = false
                 end
             end
         end
